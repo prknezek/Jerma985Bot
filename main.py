@@ -1,3 +1,4 @@
+from click import pass_context
 import discord
 from discord.ext import commands
 import requests
@@ -38,7 +39,7 @@ async def on_member_join(member) :
     channel = bot.get_channel(1033811139034886254) # channel id for bot-commands
     await channel.send("Welcome")
     await channel.send(json.loads(response.text)['setup']) # prints setup into chat
-    # response.text is in json so we are filtering the content attribute
+    # response.text is in json so we are filtering the setup attribute
     # out of the response and printing it in discord
     await channel.send(json.loads(response.text)['delivery'])
 
@@ -47,5 +48,24 @@ async def on_member_remove(member) :
     channel = bot.get_channel(1033811139034886254)
     await channel.send("Goodbye")
 
+# command to allow bot to join a voice channel
+@bot.command(pass_context = True)
+async def join(ctx) :
+    if (ctx.author.voice) : # if user running command is in a voice channel
+        channel = ctx.message.author.voice.channel # finds the channel they're in
+        await channel.connect() # connects to the channel
+    else :
+        await ctx.send("You must be in a voice channel to run this command")
+
+# command to allow bot to leave a voice channel
+@bot.command(pass_context = True) 
+async def leave(ctx) :
+    if (ctx.voice_client) : # if bot is in a voice channel
+        await ctx.guild.voice_client.disconnect() # it will disconnect
+        await ctx.send("I left the voice channel")
+    else :
+        await ctx.send("I am not in a voice channel")
+
+        
 # run the bot after initializing all commands
 bot.run(BOTTOKEN)
