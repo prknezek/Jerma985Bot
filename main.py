@@ -37,9 +37,11 @@ async def on_member_join(member) :
 
     channel = bot.get_channel(1033811139034886254) # channel id for bot-commands
     await channel.send("Welcome")
-    await channel.send(json.loads(response.text)['content']) # prints joke into chat
+    await channel.send(json.loads(response.text)['setup']) # prints setup into chat
     # response.text is in json so we are filtering the content attribute
     # out of the response and printing it in discord
+    await channel.send(json.loads(response.text)['delivery'])
+
 @bot.event
 async def on_member_remove(member) :
     channel = bot.get_channel(1033811139034886254)
