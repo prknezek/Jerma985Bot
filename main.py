@@ -1,6 +1,7 @@
 from click import pass_context
 import discord
 from discord.ext import commands
+from discord import FFmpegPCMAudio
 import requests
 import json
 
@@ -53,7 +54,9 @@ async def on_member_remove(member) :
 async def join(ctx) :
     if (ctx.author.voice) : # if user running command is in a voice channel
         channel = ctx.message.author.voice.channel # finds the channel they're in
-        await channel.connect() # connects to the channel
+        voice = await channel.connect() # connects to the channel
+        source = FFmpegPCMAudio('KICK_BACK.wav') # name of audio file
+        player = voice.play(source)
     else :
         await ctx.send("You must be in a voice channel to run this command")
 
@@ -66,6 +69,6 @@ async def leave(ctx) :
     else :
         await ctx.send("I am not in a voice channel")
 
-        
+
 # run the bot after initializing all commands
 bot.run(BOTTOKEN)
