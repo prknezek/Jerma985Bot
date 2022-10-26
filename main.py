@@ -23,6 +23,7 @@ async def on_ready():
 async def hello(ctx):
     await ctx.send("Hello")
 
+# new member join
 @bot.event
 async def on_member_join(member) :
     # importing random joke from joke api
@@ -49,6 +50,7 @@ async def on_member_remove(member) :
     channel = bot.get_channel(1033811139034886254)
     await channel.send("Goodbye")
 
+# join and leave commands
 # command to allow bot to join a voice channel
 @bot.command(pass_context = True)
 async def join(ctx) :
@@ -65,9 +67,39 @@ async def join(ctx) :
 async def leave(ctx) :
     if (ctx.voice_client) : # if bot is in a voice channel
         await ctx.guild.voice_client.disconnect() # it will disconnect
-        await ctx.send("I left the voice channel")
+        await ctx.send("Left the voice channel")
     else :
         await ctx.send("I am not in a voice channel")
+
+# audio commands
+@bot.command(pass_context = True) 
+async def pause(ctx) :
+    # calling discord utils package. voice client is what song its currently playing
+    voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+    if voice.is_playing() :
+        voice.pause()
+    else :
+        await ctx.send("No audio currently playing in voice channel")
+
+@bot.command(pass_context = True) 
+async def resume(ctx) :
+    voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+    if voice.is_paused() :
+        voice.resume()
+    else :
+        await ctx.send("Audio is not paused")
+
+@bot.command(pass_context = True) 
+async def stop(ctx) :
+    voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+    voice.stop()
+
+# bot plays custom file
+@bot.command(pass_context = True) 
+async def play(ctx, arg) :
+    voice = ctx.guild.voice_client
+    source = FFmpegPCMAudio(arg + ".wav")
+    player = voice.play(source)
 
 
 # run the bot after initializing all commands
