@@ -8,6 +8,15 @@ import json
 from apikeys import * # imports variables from local apikeys.py
 
 intents = discord.Intents.all() # make sure commands work
+# dictionary to store queued songs
+queues = {}
+
+def check_queue(ctx, id) :
+    # if there is something in the queue
+    if queues[id] != [] :
+        voice = ctx.guild.voice_client # create our voice
+        source = queues[id].pop(0) # set the source to what is in the queues array
+        player = voice.play(source) # play the source
 
 # initialize our bot with command prefix '!'
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -57,8 +66,8 @@ async def join(ctx) :
     if (ctx.author.voice) : # if user running command is in a voice channel
         channel = ctx.message.author.voice.channel # finds the channel they're in
         voice = await channel.connect() # connects to the channel
-        source = FFmpegPCMAudio('KICK_BACK.wav') # name of audio file
-        player = voice.play(source)
+        #source = FFmpegPCMAudio('KICK_BACK.wav') # name of audio file
+        #player = voice.play(source)
     else :
         await ctx.send("You must be in a voice channel to run this command")
 
@@ -98,9 +107,25 @@ async def stop(ctx) :
 @bot.command(pass_context = True) 
 async def play(ctx, arg) :
     voice = ctx.guild.voice_client
-    source = FFmpegPCMAudio(arg + ".wav")
-    player = voice.play(source)
+    song = arg + '.wav'
+    source = FFmpegPCMAudio(song)
+    player = voice.play(source,
+    # after play command is run, check queue
+    after = lambda x = None: check_queue(ctx, ctx.message.guild.id))
 
+@bot.command(pass_context = True) 
+async def queue(ctx, arg) :
+    voice = ctx.guild.voice_client
+    song = arg + '.wav'
+    source = FFmpegPCMAudio(song)
+
+    guild_id = ctx.message.guild.id
+    if guild_id in queues :
+        queues[guild_id].append(source)
+    else :
+        queues[guild_id] = [source]
+    
+    await ctx.send("Added to queue")
 
 # run the bot after initializing all commands
 bot.run(BOTTOKEN)
