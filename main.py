@@ -2,6 +2,8 @@ from click import pass_context
 import discord
 from discord.ext import commands
 from discord import FFmpegPCMAudio
+from discord import Member
+from discord.ext.commands import has_permissions, MissingPermissions
 import requests
 import json
 
@@ -126,6 +128,15 @@ async def queue(ctx, arg) :
         queues[guild_id] = [source]
     
     await ctx.send("Added to queue")
+
+@bot.event
+async def on_message(message):
+    banned_words = ["hi", "hello"]
+    # can replace "hi" with a list of banned words and detect if message in that list
+    for word in banned_words :
+        if message.content == word :
+            await message.delete()
+            await message.channel.send("Don't say that again")       
 
 # run the bot after initializing all commands
 bot.run(BOTTOKEN)
