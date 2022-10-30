@@ -21,7 +21,8 @@ def check_queue(ctx, id) :
         player = voice.play(source) # play the source
 
 # initialize our bot with command prefix '!'
-bot = commands.Bot(command_prefix='!', intents=intents)
+COMMAND_PREFIX = '!'
+bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
 
 @bot.event
 # when the bot is ready to start receiveing commands it will execute this function
@@ -128,7 +129,7 @@ async def queue(ctx, arg) :
         queues[guild_id] = [source]
     
     await ctx.send("Added to queue")
-
+"""
 @bot.event
 async def on_message(message):
     banned_words = ["hi", "hello"]
@@ -136,7 +137,32 @@ async def on_message(message):
     for word in banned_words :
         if message.content == word :
             await message.delete()
-            await message.channel.send("Don't say that again")       
+            await message.channel.send("Don't say that again")     
+""" 
+
+@bot.command()
+@has_permissions(kick_members=True) # checks if user running bot command has permission to kick members
+# member is user to be kicked, reason is reason why they were kicked
+async def kick(ctx, member: discord.Member, *, reason=None) :
+    await member.kick(reason=reason)
+    await ctx.send(f'User {member} has been kicked')
+    
+@kick.error # if user doesn't have permission to kick members
+async def kick_error(ctx, error) :
+    if isinstance(error, commands.MissingPermissions) :
+        await ctx.send("You dont have permission to kick")
+
+@bot.command()
+@has_permissions(ban_members=True) # checks if user running bot command has permission to ban members
+# member is user to be kicked, reason is reason why they were banned
+async def ban(ctx, member: discord.Member, *, reason=None) :
+    await member.ban(reason=reason)
+    await ctx.send(f'User {member} has been banned')
+
+@kick.error # if user doesn't have permission to ban members
+async def ban_error(ctx, error) :
+    if isinstance(error, commands.MissingPermissions) :
+        await ctx.send("You dont have permission to ban")
 
 # run the bot after initializing all commands
 bot.run(BOTTOKEN)
