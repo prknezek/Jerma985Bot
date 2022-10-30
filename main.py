@@ -263,5 +263,12 @@ async def embed(ctx) : # *** CAN CHANGE TO JERMA WIKI LINK
     embed.set_footer(text="Embed footer")
     await ctx.send(embed=embed)
 
+@bot.event() # example general error
+async def on_command_error(ctx, error) : # detects if error is MissingPermissions type
+    if isinstance(error, commands.MissingPermissions) :
+        await ctx.send("You don't have permission to run this command")
+
+
+
 # run the bot after initializing all commands
 bot.run(BOTTOKEN)
