@@ -19,6 +19,14 @@ intents = discord.Intents.all() # make sure commands work
 # dictionary to store queued songs
 queues = {}
 
+# function checks the current music queue
+def check_queue(ctx, id) :
+    # if there is something in the queue
+    if queues[id] != [] :
+        voice = ctx.guild.voice_client # create our voice
+        source = queues[id].pop(0) # set the source to what is in the queues array
+        player = voice.play(source) # play the source
+
 # authentication w/ Twitch API
 client_id = TWITCH_CLIENT_ID
 client_secret = TWITCH_CLIENT_SECRET_ID
@@ -49,14 +57,7 @@ def check_user(user) :
     except IndexError :
         return False
 
-def check_queue(ctx, id) :
-    # if there is something in the queue
-    if queues[id] != [] :
-        voice = ctx.guild.voice_client # create our voice
-        source = queues[id].pop(0) # set the source to what is in the queues array
-        player = voice.play(source) # play the source
-
-# initialize our bot with command prefix '!'
+# initialize bot with command prefix '!'
 COMMAND_PREFIX = '!'
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
 
@@ -101,8 +102,7 @@ async def on_ready():
                             f"\nhttps://www.twitch.tv/jerma985"
                             f"@everyone"
                         )
-        else :# if they aren't live:
-            print("not live")
+        else : # if they aren't live:
             async for message in channel.history(limit=200) :
                 if "Jerma985 is live on Twitch!" in message.content :
                     await message.delete()
@@ -141,8 +141,8 @@ async def on_member_join(member) :
 
     response = requests.request("GET", jokeurl, headers=headers, params=querystring)
 
-    channel = bot.get_channel(1033811139034886254) # channel id for bot-commands
-    await channel.send("Welcome " + member.name + "!")
+    channel = bot.get_channel(1036174882276384859) # channel id for bot-commands
+    await channel.send(f"Welcome {member.name}! Here's a joke for you.")
     await channel.send(json.loads(response.text)['setup']) # prints setup into chat
     # response.text is in json so we are filtering the setup attribute
     # out of the response and printing it in discord
@@ -220,16 +220,6 @@ async def queue(ctx, arg) :
         queues[guild_id] = [source]
     
     await ctx.send("Added to queue")
-"""
-@bot.event
-async def on_message(message):
-    banned_words = ["hi", "hello"]
-    # can replace "hi" with a list of banned words and detect if message in that list
-    for word in banned_words :
-        if message.content == word :
-            await message.delete()
-            await message.channel.send("Don't say that again")     
-""" 
 
 @bot.command()
 @has_permissions(kick_members=True) # checks if user running bot command has permission to kick members
