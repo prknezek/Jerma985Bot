@@ -1,3 +1,4 @@
+from re import T
 from click import pass_context
 import discord
 from discord.ext import commands
@@ -163,6 +164,24 @@ async def ban(ctx, member: discord.Member, *, reason=None) :
 async def ban_error(ctx, error) :
     if isinstance(error, commands.MissingPermissions) :
         await ctx.send("You dont have permission to ban")
+
+@bot.command()
+async def embed(ctx) : # CAN CHANGE TO JERMA WIKI LINK 
+    embed = discord.Embed(title="Test", url="https://google.com", 
+    description="Takes you to google", color=0x4dff4d)
+
+    # putting name of member and member avatar in embed
+    embed.set_author(name=ctx.author.display_name, url="https://github.com/prknezek/Jerma985Bot", 
+    icon_url=ctx.author.display_avatar)
+
+    #thumbnail
+    embed.set_thumbnail(url="https://static.wikia.nocookie.net/jerma-lore/images/9/91/Evil_Jerma.png")
+    
+    embed.add_field(name="Field 1", value="desc for field 1", inline=True)
+    embed.add_field(name="Field 2", value="desc for field 2", inline=True)
+    
+    embed.set_footer(text="Embed footer")
+    await ctx.send(embed=embed)
 
 # run the bot after initializing all commands
 bot.run(BOTTOKEN)
