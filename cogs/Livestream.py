@@ -3,6 +3,7 @@ from discord.ext import tasks, commands
 from apikeys import *
 from twitchAPI.twitch import Twitch
 import requests
+from random import randint
 
 # authentication w/ Twitch API
 client_id = TWITCH_CLIENT_ID
@@ -17,6 +18,9 @@ API_HEADERS = {
 
 # returns true if streamer is online and false if not online
 def check_user(user) :
+    """
+    Checks if the specified user is currently streaming
+    """
     try:
         userid = twitch.get_users(logins=[user])['data'][0]['id']
         url = TWITCH_STREAM_API_ENDPOINTS_V5.format(userid)
@@ -43,7 +47,10 @@ class Livestream(commands.Cog) :
     async def on_ready(self):
         # live streaming detection
         @tasks.loop(minutes=1)
-        async def live_notifs_loop() :
+        async def live_notifs_loop(self) :
+            """
+            Sends out a notification if Jerma985 is live
+            """
             # grabbing info from server
             guild = self.bot.get_guild(1033811091828002817)
             status = check_user("jerma985")
@@ -96,6 +103,57 @@ class Livestream(commands.Cog) :
         live_notifs_loop.start()
         # print statement for when bot is ready
         print("Livestream Cog Loaded")
+    
+    @commands.command()
+    # gives user a random broadcast from the past 60 days
+    # twitch only stores broadcasts for 60 days
+    async def rstream(self, ctx):
+        """
+        Get's a random stream from all available recorded 
+        streams on Jerma985's Twitch Channel.
+
+        NOTE: (most videos are deleted after 60 days so 
+        there is limited access to previously recorded broadcasts)
+        """
+        # gets broadcaster info
+        broadcaster_info = twitch.get_users(user_ids=None, logins="jerma985")["data"][0]
+        broadcaster_id = broadcaster_info['id']
+        broadcaster_image = broadcaster_info['profile_image_url']
+        twitch_url = "https://twitch.tv/jerma985"
+
+        # gets all available past broadcasts
+        past_broadcasts = twitch.get_videos(user_id=broadcaster_id)['data']
+        video_num = len(past_broadcasts) # total number of past broadcasts
+        broadcast_index = randint(0, video_num) # generates a random number as the index for past broadcast
+
+        print(f"-----{broadcast_index}-----")
+
+        # grabs the random broadcast from data
+        selected_broadcast = past_broadcasts[broadcast_index]
+        # additional info for embed
+        title = selected_broadcast['title']
+        url = selected_broadcast['url']
+        author = selected_broadcast['user_name']
+        published = selected_broadcast['published_at']
+        duration = selected_broadcast['duration']
+
+        # formatting published
+        format_index = published.index("T")
+        published = published[:format_index]
+
+        thumbnail = selected_broadcast['thumbnail_url']
+
+        embed = discord.Embed(title="Random Stream", url=url, description=title, color=0x6441a5)
+        
+        embed.set_author(name=author, url=twitch_url, icon_url=broadcaster_image)
+        
+        # thumbnail
+        #embed.set_thumbnail(url="https://static.wikia.nocookie.net/jerma-lore/images/9/91/Evil_Jerma.png")
+        user = ctx.message.author.display_name
+        embed.add_field(name="Duration:", value=duration, inline=True)
+        embed.add_field(name="Published:", value=published, inline=True)
+        embed.set_footer(text=f"Sent by: {user}")
+        await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot) :
     await bot.add_cog(Livestream(bot), guilds=(discord.Object(id=1033811091828002817)))
