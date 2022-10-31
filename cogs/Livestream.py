@@ -18,9 +18,6 @@ API_HEADERS = {
 
 # returns true if streamer is online and false if not online
 def check_user(user) :
-    """
-    Checks if the specified user is currently streaming
-    """
     try:
         userid = twitch.get_users(logins=[user])['data'][0]['id']
         url = TWITCH_STREAM_API_ENDPOINTS_V5.format(userid)
@@ -45,12 +42,12 @@ class Livestream(commands.Cog) :
     @commands.Cog.listener()
     # when the bot is ready to start receiveing commands it will execute this function
     async def on_ready(self):
+        # print statement for when bot is ready
+        print("Livestream Cog Loaded")
+
         # live streaming detection
         @tasks.loop(minutes=1)
-        async def live_notifs_loop(self) :
-            """
-            Sends out a notification if Jerma985 is live
-            """
+        async def live_notifs_loop() :
             # grabbing info from server
             guild = self.bot.get_guild(1033811091828002817)
             status = check_user("jerma985")
@@ -101,20 +98,11 @@ class Livestream(commands.Cog) :
         
         # starts the loop to scan for streaming activity
         live_notifs_loop.start()
-        # print statement for when bot is ready
-        print("Livestream Cog Loaded")
-    
+
     @commands.command()
     # gives user a random broadcast from the past 60 days
     # twitch only stores broadcasts for 60 days
     async def rstream(self, ctx):
-        """
-        Get's a random stream from all available recorded 
-        streams on Jerma985's Twitch Channel.
-
-        NOTE: (most videos are deleted after 60 days so 
-        there is limited access to previously recorded broadcasts)
-        """
         # gets broadcaster info
         broadcaster_info = twitch.get_users(user_ids=None, logins="jerma985")["data"][0]
         broadcaster_id = broadcaster_info['id']
