@@ -11,7 +11,6 @@ intents.members = True
 COMMAND_PREFIX = '!' # initialize bot with command prefix '!'
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
 
-
 @bot.event
 async def on_ready() :
     print("Jerma Bot Online")

@@ -39,24 +39,6 @@ class Admin(commands.Cog) :
         # of type !dm @[user] [message]
         embed = discord.Embed(title=message)
         await user.send(embed=embed)
-    
-    @commands.command()
-    async def embed(self, ctx) : # *** CAN CHANGE TO JERMA WIKI LINK 
-        embed = discord.Embed(title="Test", url="https://google.com", 
-        description="Takes you to google", color=0x4dff4d)
-
-        # putting name of member and member avatar in embed
-        embed.set_author(name=ctx.author.display_name, url="https://github.com/prknezek/Jerma985Bot", 
-        icon_url=ctx.author.display_avatar)
-
-        #thumbnail
-        embed.set_thumbnail(url="https://static.wikia.nocookie.net/jerma-lore/images/9/91/Evil_Jerma.png")
-        
-        embed.add_field(name="Field 1", value="desc for field 1", inline=True)
-        embed.add_field(name="Field 2", value="desc for field 2", inline=True)
-        
-        embed.set_footer(text="Embed footer")
-        await ctx.send(embed=embed)
 
 async def setup(bot: commands.Bot) :
     await bot.add_cog(Admin(bot), guilds=(discord.Object(id=1033811091828002817)))

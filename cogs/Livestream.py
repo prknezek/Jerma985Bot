@@ -143,5 +143,9 @@ class Livestream(commands.Cog) :
         embed.set_footer(text=f"Sent by: {user}")
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def twitch(self, ctx) :
+        await ctx.send("https://twitch.tv/jerma985")
+        
 async def setup(bot: commands.Bot) :
     await bot.add_cog(Livestream(bot), guilds=(discord.Object(id=1033811091828002817)))
