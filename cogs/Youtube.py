@@ -1,7 +1,7 @@
 
 from googleapiclient.discovery import build
-import discord
-from discord.ext import commands, tasks
+import nextcord
+from nextcord.ext import commands, tasks
 from apikeys import *
 
 # building base youtube api
@@ -37,7 +37,7 @@ class Youtube(commands.Cog) :
             link = f"https://www.youtube.com/watch?v={j2_video_id}"
             
             channel = await self.bot.fetch_channel(1036744556156309554)
-            # all messages in discord channel (limit=50)
+            # all messages in nextcord channel (limit=50)
             messages = [message async for message in channel.history(limit=50)]
             # if message is not sent in channel then send message
             if len(messages) == 0 :
@@ -47,7 +47,7 @@ class Youtube(commands.Cog) :
                         f"\n***({j2_video_published})***"
                 )
             else :
-                async for message in messages :
+                for message in messages :
                     if link not in message.content :
                         await channel.send(
                             f"@everyone, **Jerma985** just posted a video!"
@@ -65,4 +65,4 @@ class Youtube(commands.Cog) :
         await ctx.send("https://youtube.com/2ndJerma")
 
 async def setup(bot: commands.Bot) :
-    await bot.add_cog(Youtube(bot), guilds=(discord.Object(id=1033811091828002817)))
+    bot.add_cog(Youtube(bot))

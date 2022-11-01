@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import nextcord
+from nextcord.ext import commands
 from apikeys import *
 import requests
 import json
@@ -19,7 +19,7 @@ class Greetings(commands.Cog) :
 
     # new member join event
     @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member) :
+    async def on_member_join(self, member: nextcord.Member) :
         # importing random joke from joke api
         jokeurl = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
 
@@ -35,7 +35,7 @@ class Greetings(commands.Cog) :
         await member.send(f"Welcome {member.mention}! Here's a joke for you.")
         await member.send(f"{json.loads(response.text)['setup']}") # prints setup into chat
         # response.text is in json so we are filtering the setup attribute
-        # out of the response and printing it in discord
+        # out of the response and printing it in nextcord
         await member.send(f"{json.loads(response.text)['delivery']}")
 
     @commands.Cog.listener()
@@ -61,4 +61,4 @@ class Greetings(commands.Cog) :
 
 # export cog to bot
 async def setup(bot: commands.Bot) :
-    await bot.add_cog(Greetings(bot), guilds=(discord.Object(id=1033811091828002817)))
+    bot.add_cog(Greetings(bot))

@@ -1,5 +1,5 @@
-import discord
-from discord.ext import tasks, commands
+import nextcord
+from nextcord.ext import tasks, commands
 from apikeys import *
 from twitchAPI.twitch import Twitch
 import requests
@@ -90,11 +90,11 @@ class Livestream(commands.Cog) :
 
             # if jerma is live change status
             if status :
-                await self.bot.change_presence(status=discord.Status.online, 
-                activity=discord.Streaming(name=stream_name, url="https://www.twitch.tv/jerma985"))
+                await self.bot.change_presence(status=nextcord.Status.online, 
+                activity=nextcord.Streaming(name=stream_name, url="https://www.twitch.tv/jerma985"))
             else :
-                await self.bot.change_presence(status=discord.Status.online, 
-                activity=discord.CustomActivity(name="test", emoji=":red_circle:"))
+                await self.bot.change_presence(status=nextcord.Status.online, 
+                activity=nextcord.CustomActivity(name="test", emoji=":red_circle:"))
         
         # starts the loop to scan for streaming activity
         live_notifs_loop.start()
@@ -131,7 +131,7 @@ class Livestream(commands.Cog) :
 
         thumbnail = selected_broadcast['thumbnail_url']
 
-        embed = discord.Embed(title="Random Stream", url=url, description=title, color=0x6441a5)
+        embed = nextcord.Embed(title="Random Stream", url=url, description=title, color=0x6441a5)
         
         embed.set_author(name=author, url=twitch_url, icon_url=broadcaster_image)
         
@@ -148,4 +148,4 @@ class Livestream(commands.Cog) :
         await ctx.send("https://twitch.tv/jerma985")
         
 async def setup(bot: commands.Bot) :
-    await bot.add_cog(Livestream(bot), guilds=(discord.Object(id=1033811091828002817)))
+    bot.add_cog(Livestream(bot))
