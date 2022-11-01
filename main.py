@@ -1,7 +1,7 @@
 import asyncio
 import nextcord
-import config
 from nextcord.ext import commands
+from nextcord import Interaction
 import os
 
 from apikeys import * # imports variables from local apikeys.py
@@ -14,6 +14,12 @@ bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
 @bot.event
 async def on_ready() :
     print("Jerma Bot Online")
+
+serverId = 1033811091828002817
+
+@bot.slash_command(name ="test", description = "introduction to slash commands", guild_ids=[serverId])
+async def test(interaction : Interaction) :
+    await interaction.response.send_message("Hello")
 
 # cog loading
 async def load() :
