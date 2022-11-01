@@ -17,7 +17,7 @@ class Youtube(commands.Cog) :
     @commands.Cog.listener()
     async def on_ready(self) :
         # detects when a new youtube video is released
-        @tasks.loop(minutes=1)
+        @tasks.loop(minutes=2)
         async def yt_update():
             # publication activity req
             j2_publication_req = youtube.activities().list(part = "snippet", channelId = j2_youtube_id)

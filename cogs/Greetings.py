@@ -38,6 +38,27 @@ class Greetings(commands.Cog) :
         # out of the response and printing it in discord
         await member.send(f"{json.loads(response.text)['delivery']}")
 
+    @commands.Cog.listener()
+    # when user reacts, function is called
+    async def on_reaction_add(self, reaction, user) :
+        channel = reaction.message.channel
+        await channel.send(user.name + " added: " + reaction.emoji)
+
+    @commands.Cog.listener()
+    # when user unreacts, function is called
+    async def on_reaction_remove(self, reaction, user) :
+        channel = reaction.message.channel
+        await channel.send(user.name + " removed: " + reaction.emoji)
+
+    @commands.Cog.listener()
+    async def on_message(self, message) :
+        # if message was sent by the bot
+        if message.author == self.bot.user :
+            return
+        if "happy" in message.content :
+            emoji = '\N{THUMBS UP SIGN}'
+            await message.add_reaction(emoji)
+
 # export cog to bot
 async def setup(bot: commands.Bot) :
     await bot.add_cog(Greetings(bot), guilds=(discord.Object(id=1033811091828002817)))
