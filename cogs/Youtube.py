@@ -2,6 +2,7 @@
 from googleapiclient.discovery import build
 import nextcord
 from nextcord.ext import commands, tasks
+from nextcord import Interaction
 from apikeys import *
 
 # building base youtube api
@@ -13,6 +14,8 @@ j985_youtube_id = "Jerma985"
 class Youtube(commands.Cog) :
     def __init__(self, bot: commands.Bot) :
         self.bot = bot
+
+    serverId = 1033811091828002817
 
     @commands.Cog.listener()
     async def on_ready(self) :
@@ -60,9 +63,9 @@ class Youtube(commands.Cog) :
         yt_update.start()
         print("Youtube Cog Loaded")
         
-    @commands.command()
+    @nextcord.slash_command(name="youtube", description="sends link to Jerma985's youtube channel, 2ndJerma", guild_ids=[serverId])
     async def youtube(self, ctx) :
         await ctx.send("https://youtube.com/2ndJerma")
 
-async def setup(bot: commands.Bot) :
+def setup(bot: commands.Bot) :
     bot.add_cog(Youtube(bot))

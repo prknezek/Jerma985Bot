@@ -1,5 +1,6 @@
 import nextcord
 from nextcord.ext import commands
+from nextcord import Interaction
 from apikeys import *
 import requests
 import json
@@ -8,14 +9,16 @@ class Greetings(commands.Cog) :
     def __init__(self, bot: commands.Bot) :
         self.bot = bot
 
+    serverId = 1033811091828002817
+
     @commands.Cog.listener()
     async def on_ready(self):
         print("Greetings Cog Loaded")
 
-    @commands.command()
+    @nextcord.slash_command(name="hello", description="says hello", guild_ids=[serverId])
     # name of function is what the user will type to call this command
-    async def hello(self, ctx):
-        await ctx.send("Hello")
+    async def hello(self, interaction : Interaction):
+        await interaction.send("Hello")
 
     # new member join event
     @commands.Cog.listener()
@@ -60,5 +63,5 @@ class Greetings(commands.Cog) :
             await message.add_reaction(emoji)
 
 # export cog to bot
-async def setup(bot: commands.Bot) :
+def setup(bot: commands.Bot) :
     bot.add_cog(Greetings(bot))

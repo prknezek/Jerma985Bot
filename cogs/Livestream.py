@@ -1,5 +1,6 @@
 import nextcord
 from nextcord.ext import tasks, commands
+from nextcord import Interaction
 from apikeys import *
 from twitchAPI.twitch import Twitch
 import requests
@@ -39,6 +40,8 @@ class Livestream(commands.Cog) :
     def __init__(self, bot: commands.Bot) :
         self.bot = bot
 
+    serverId = 1033811091828002817
+
     @commands.Cog.listener()
     # when the bot is ready to start receiveing commands it will execute this function
     async def on_ready(self):
@@ -67,9 +70,8 @@ class Livestream(commands.Cog) :
                 # if no messages in channel then send live message
                 if len(messages) == 0 :
                     await channel.send(
-                        f":red_circle: **LIVE**\nJerma985 is live on Twitch!"
+                        f":red_circle: **LIVE**\n@everyone, **Jerma985** is live on Twitch!"
                         f"\nhttps://www.twitch.tv/jerma985"
-                        f"\n@everyone"
                     )
                 else : # if messages in channel, detect whether or not to delete them
                     async for message in channel.history(limit=50) :
@@ -79,9 +81,8 @@ class Livestream(commands.Cog) :
                         # sends live message if it wasn't sent out yet
                         else :
                             await channel.send(
-                                f":red_circle: **LIVE**\nJerma985 is live on Twitch!"
+                                f":red_circle: **LIVE**\n@everyone, **Jerma985** is live on Twitch!"
                                 f"\nhttps://www.twitch.tv/jerma985"
-                                f"@everyone"
                             )
             else : # if they aren't live:
                 async for message in channel.history(limit=200) :
@@ -99,10 +100,10 @@ class Livestream(commands.Cog) :
         # starts the loop to scan for streaming activity
         live_notifs_loop.start()
 
-    @commands.command()
+    @nextcord.slash_command(name="rstream", description="retrieves a random Jerma985 stream", guild_ids=[serverId])
     # gives user a random broadcast from the past 60 days
     # twitch only stores broadcasts for 60 days
-    async def rstream(self, ctx):
+    async def rstream(self, interaction : Interaction):
         # gets broadcaster info
         broadcaster_info = twitch.get_users(user_ids=None, logins="jerma985")["data"][0]
         broadcaster_id = broadcaster_info['id']
@@ -137,15 +138,15 @@ class Livestream(commands.Cog) :
         
         # thumbnail
         #embed.set_thumbnail(url="https://static.wikia.nocookie.net/jerma-lore/images/9/91/Evil_Jerma.png")
-        user = ctx.message.author.display_name
+        user = interaction.user.display_name
         embed.add_field(name="Duration:", value=duration, inline=True)
         embed.add_field(name="Published:", value=published, inline=True)
         embed.set_footer(text=f"Sent by: {user}")
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.command()
-    async def twitch(self, ctx) :
-        await ctx.send("https://twitch.tv/jerma985")
+    @nextcord.slash_command(name="twitch", description="sends link to Jerma985's twitch", guild_ids=[serverId])
+    async def twitch(self, interaction : Interaction) :
+        await interaction.send("https://twitch.tv/jerma985")
         
-async def setup(bot: commands.Bot) :
+def setup(bot: commands.Bot) :
     bot.add_cog(Livestream(bot))

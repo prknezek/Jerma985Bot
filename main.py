@@ -17,10 +17,6 @@ async def on_ready() :
 
 serverId = 1033811091828002817
 
-@bot.slash_command(name ="test", description = "introduction to slash commands", guild_ids=[serverId])
-async def test(interaction : Interaction) :
-    await interaction.response.send_message("Hello")
-
 # cog loading
 async def load() :
     for filename in os.listdir("./cogs") :
