@@ -1,4 +1,3 @@
-
 from googleapiclient.discovery import build
 import nextcord
 from nextcord.ext import commands, tasks
@@ -49,16 +48,26 @@ class Youtube(commands.Cog) :
                         f"\n{link}"
                         f"\n***({j2_video_published})***"
                 )
-            else :
+            else :                
+                alreadySent = False
                 for message in messages :
-                    if link not in message.content :
-                        await channel.send(
-                            f"@everyone, **Jerma985** just posted a video!"
-                            f"\n{link}"
-                            f"\n***({j2_video_published})***"
-                        )
-                    else :
-                        pass
+                    if link in message.content:
+                        alreadySent = True
+                    # ur kinda braindead
+                    # if link not in message.content :
+                    #     await channel.send(
+                    #         f"@everyone, **Jerma985** just posted a video!"
+                    #         f"\n{link}"
+                    #         f"\n***({j2_video_published})***"
+                    #     )
+                    # else :
+                    #     pass
+                if alreadySent == False:
+                    await channel.send(
+                        f"@everyone, **Jerma985** just posted a video!"
+                        f"\n{link}"
+                        f"\n***({j2_video_published})***"
+                    )
 
         yt_update.start()
         print("Youtube Cog Loaded")
