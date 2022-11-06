@@ -112,8 +112,8 @@ class Livestream(commands.Cog) :
 
         # gets all available past broadcasts
         past_broadcasts = twitch.get_videos(user_id=broadcaster_id)['data']
-        video_num = len(past_broadcasts) # total number of past broadcasts
-        broadcast_index = randint(0, video_num) # generates a random number as the index for past broadcast
+        video_num_index = len(past_broadcasts)-1 # index of last broadcast
+        broadcast_index = randint(0, video_num_index) # generates a random number as the index for past broadcast
 
         print(f"-----{broadcast_index}-----")
 
@@ -125,6 +125,15 @@ class Livestream(commands.Cog) :
         author = selected_broadcast['user_name']
         published = selected_broadcast['published_at']
         duration = selected_broadcast['duration']
+        
+        # formatting duration
+        formattedDuration = ""
+        for x in duration:
+            if x.isnumeric():
+                formattedDuration = formattedDuration + x
+            else:
+                formattedDuration = formattedDuration + x + " "
+        duration = formattedDuration
 
         # formatting published
         format_index = published.index("T")
