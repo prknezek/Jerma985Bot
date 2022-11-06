@@ -87,7 +87,7 @@ class Data(commands.Cog) :
         if success:
             await interaction.response.send_message("I have stored your message for you!")
         else:
-            await interaction.response.send_message("Uh oh! I'm having trouble connecting right now")
+            await interaction.response.send_message("Uh oh! I'm having trouble connecting right now.")
         
         
 
