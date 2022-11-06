@@ -58,6 +58,10 @@ def storeData(serverID, user, data):
             cursor.close()
             connection.close()
             print("MySQL connection has been closed")
+            return True
+        else:
+            print("Failed to connect to database")
+            return False
     
     
         
@@ -79,9 +83,11 @@ class Data(commands.Cog) :
     async def store_info (self, interaction : Interaction, message:str):
         serverID = interaction.guild.id
 
-        storeData(serverID, interaction.user, message)
-
-        await interaction.response.send_message("I have stored your message for you!")
+        success = storeData(serverID, interaction.user, message)
+        if success:
+            await interaction.response.send_message("I have stored your message for you!")
+        else:
+            await interaction.response.send_message("Uh oh! I'm having trouble connecting right now")
         
         
 
