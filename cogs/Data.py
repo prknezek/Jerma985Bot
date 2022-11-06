@@ -17,8 +17,11 @@ PASSWORD = 'root'
 
 # function to store currency into database
 # returns boolean: True if successful, False if unsuccessful
-# serverID should be id of guild (interaction.guild.id)
-# user should be the user object (interaction.user)
+# serverID should be id of guild (interaction.guild.id) - used for identifying table
+# user should be the user object (interaction.user) - used for ID and username
+# data should be a dictionary with key, value pairs to be stored in the database
+# ex: { "currency": $20, "dubs": 2 }
+# they will all be stored as strings with length 500
 def storeData(serverID, user, data):
     
     # connect to database
@@ -34,30 +37,98 @@ def storeData(serverID, user, data):
         print("Failed to connect to database")
         return False
     
+    table = "db_" + str(serverID)
+    cursor = connection.cursor()
+    
     # create a table if not already done
     try:    
         # create a table for the data (will error if it already exists)
-        mySql_Create_Table_Query = """CREATE TABLE DB_""" + str(serverID) + """ (
-                                 UserId bigint NOT NULL,
-                                 UserStr varchar(250) NOT NULL,
-                                 Currency varchar(500) NOT NULL,
-                                 PRIMARY KEY (UserId)) """
-        cursor = connection.cursor()
-        result = cursor.execute(mySql_Create_Table_Query)
+        MYSQL_CREATE_TABLE_QUERY = "CREATE TABLE " + table + " (UserId bigint NOT NULL, UserStr varchar(250) NOT NULL,"
+        for col in data.keys():
+            MYSQL_CREATE_TABLE_QUERY += str(col) + " varchar(500),"
+        MYSQL_CREATE_TABLE_QUERY += "PRIMARY KEY (UserId))"
+
+        # mySql_Create_Table_Query = """CREATE TABLE DB_""" + str(serverID) + """ (
+        #                          UserId bigint NOT NULL,
+        #                          UserStr varchar(250) NOT NULL,
+        #                          Currency varchar(500) NOT NULL,
+        #                          PRIMARY KEY (UserId)) """
+
+        result = cursor.execute(MYSQL_CREATE_TABLE_QUERY)
         print("Server (" + str(serverID) + ") Table created successfully")
+
     except mysql.connector.Error as error:
         print("Failed to create table in MySql: {}".format(error))
+        try:
+            
+            cursor.execute("SELECT * FROM " + table + " WHERE 1")
+            record = cursor.fetchall()
+
+            print("CONNECTION STATUS: " + str(connected) + " " + str(connection.is_connected()))
+            descriptionTuples = cursor.description
+            num_cols = len(descriptionTuples)                        
+            cols = [i[0] for i in cursor.description]
+            
+            
+            if (num_cols-2 < len(data.keys())):
+                MYSQL_ADD_COLUMNS_QUERY = "ALTER TABLE " + table + " "
+                comma = False
+                for requestedCol in data.keys():
+                    if str(requestedCol) not in cols:
+                        if comma:
+                            MYSQL_ADD_COLUMNS_QUERY += ", "                    
+                        MYSQL_ADD_COLUMNS_QUERY += "ADD COLUMN " + requestedCol
+                        comma = True
+                MYSQL_ADD_COLUMNS_QUERY += ";"
+
+                if comma:
+                    result = cursor.execute(MYSQL_ADD_COLUMNS_QUERY)
+        except Exception as e:
+            print("exception: {}".format(str(e)))
     
     # insert data into database
     try:
         if connected and connection.is_connected():
-            # setup variables
-            table = "DB_" + str(serverID)
-            MySql_Insert_Row_Query = "INSERT INTO " + table + " (UserId, UserStr, Currency) VALUES (%(userId)s, %(userstr)s, %(value)s) ON DUPLICATE KEY UPDATE Currency=%(value)s"
-            MySql_Insert_Row_values = {'userId': int(user.id), 'userstr': str(user), 'value': data}
+            # setup variables            
+            MYSQL_INSERT_ROW_QUERY = "INSERT INTO " + table + " (UserId, UserStr,"
+            
+            # add columns
+            comma = False
+            for col in data.keys():
+                if comma:
+                    MYSQL_INSERT_ROW_QUERY += ","                    
+                MYSQL_INSERT_ROW_QUERY += str(col)
+                comma = True
+            
+            MYSQL_INSERT_ROW_QUERY += ") VALUES (%(userId)s,%(userstr)s,"
+            MySql_Insert_Row_values = {'userId': int(user.id), 'userstr': str(user)}
+
+            # add values
+            i = 0;
+            comma = False
+            for col in data.keys():
+                if comma:
+                    MYSQL_INSERT_ROW_QUERY += ","                    
+                MYSQL_INSERT_ROW_QUERY += "%("+str(i)+")s"
+                MySql_Insert_Row_values[str(i)] = str(data.get(col))
+                comma = True
+                i += 1
+            
+            MYSQL_INSERT_ROW_QUERY += ") ON DUPLICATE KEY UPDATE "
+
+            i = 0
+            comma = False
+            for col in data.keys():
+                if comma:
+                    MYSQL_INSERT_ROW_QUERY += ","                    
+                MYSQL_INSERT_ROW_QUERY += str(col) + " = " + "%("+str(i)+")s"
+                comma = True
+                i += 1
+             
+
 
             # insert data
-            cursor.execute(MySql_Insert_Row_Query, MySql_Insert_Row_values)
+            cursor.execute(MYSQL_INSERT_ROW_QUERY, MySql_Insert_Row_values)
             connection.commit()                
 
             #close connections
@@ -68,12 +139,11 @@ def storeData(serverID, user, data):
         else:
             print("Failed to connect to database somehow")
             return False
-    except:
-        print("Failed to insert with {} and {}".format(str(user.id), data))
+    except Exception as e:
+        print("Failed to insert data: {}".format(str(e)))        
+        print(MYSQL_INSERT_ROW_QUERY)
         return False
     
-    
-        
 
 class Data(commands.Cog) :
     # ----------initialize cog----------
@@ -91,7 +161,7 @@ class Data(commands.Cog) :
     @nextcord.slash_command(name = "store-info", description = "Store some data", guild_ids = [serverId])
     async def store_info (self, interaction : Interaction, message:str):
         serverID = interaction.guild.id
-        success = storeData(serverID, interaction.user, message)
+        success = storeData(serverID, interaction.user, {'MESSAGE': message, 'MONEY': "$30"})
         if success:
             await interaction.response.send_message("I have stored your data for you!")
         else:
