@@ -64,27 +64,27 @@ def storeData(serverID, user, data):
             cursor.execute("SELECT * FROM " + table + " WHERE 1")
             record = cursor.fetchall()
 
-            print("CONNECTION STATUS: " + str(connected) + " " + str(connection.is_connected()))
             descriptionTuples = cursor.description
             num_cols = len(descriptionTuples)                        
             cols = [i[0] for i in cursor.description]
             
             
-            if (num_cols-2 < len(data.keys())):
-                MYSQL_ADD_COLUMNS_QUERY = "ALTER TABLE " + table + " "
-                comma = False
-                for requestedCol in data.keys():
-                    if str(requestedCol) not in cols:
-                        if comma:
-                            MYSQL_ADD_COLUMNS_QUERY += ", "                    
-                        MYSQL_ADD_COLUMNS_QUERY += "ADD COLUMN " + requestedCol
-                        comma = True
-                MYSQL_ADD_COLUMNS_QUERY += ";"
-
-                if comma:
-                    result = cursor.execute(MYSQL_ADD_COLUMNS_QUERY)
+            
+            MYSQL_ADD_COLUMNS_QUERY = "ALTER TABLE " + table + " "
+            comma = False
+            for requestedCol in data.keys():
+                if str(requestedCol) not in cols:
+                    if comma:
+                        MYSQL_ADD_COLUMNS_QUERY += ", "                    
+                    MYSQL_ADD_COLUMNS_QUERY += "ADD COLUMN " + requestedCol + " varchar(500)"
+                    comma = True
+            print(MYSQL_ADD_COLUMNS_QUERY)      
+            if comma:
+                result = cursor.execute(MYSQL_ADD_COLUMNS_QUERY)
+                                  
         except Exception as e:
             print("exception: {}".format(str(e)))
+            print(MYSQL_ADD_COLUMNS_QUERY)
     
     # insert data into database
     try:
@@ -161,7 +161,7 @@ class Data(commands.Cog) :
     @nextcord.slash_command(name = "store-info", description = "Store some data", guild_ids = [serverId])
     async def store_info (self, interaction : Interaction, message:str):
         serverID = interaction.guild.id
-        success = storeData(serverID, interaction.user, {'MESSAGE': message, 'MONEY': "$30"})
+        success = storeData(serverID, interaction.user, {'MESSAGE': message, 'MONEY': "$30", 'huh': "bruh"})
         if success:
             await interaction.response.send_message("I have stored your data for you!")
         else:
