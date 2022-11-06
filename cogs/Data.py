@@ -14,10 +14,14 @@ DATABASE = 'jerma985bot'
 USER = 'root'
 PASSWORD = 'root'
 
+
 # function to store currency into database
+# returns boolean: True if successful, False if unsuccessful
 # serverID should be id of guild (interaction.guild.id)
 # user should be the user object (interaction.user)
 def storeData(serverID, user, data):
+    
+    # connect to database
     connected = False;
     try:
         # create connection to sql server
@@ -26,29 +30,31 @@ def storeData(serverID, user, data):
                                              user = USER,
                                              password = PASSWORD)
         connected = True;
-        
+    except:
+        print("Failed to connect to database")
+        return False
+    
+    # create a table if not already done
+    try:    
         # create a table for the data (will error if it already exists)
         mySql_Create_Table_Query = """CREATE TABLE DB_""" + str(serverID) + """ (
-                                 Id int(11) NOT NULL AUTO_INCREMENT,
-                                 User varchar(250) NOT NULL,
+                                 UserId bigint NOT NULL,
+                                 UserStr varchar(250) NOT NULL,
                                  Currency varchar(500) NOT NULL,
-                                 PRIMARY KEY (Id)) """
+                                 PRIMARY KEY (UserId)) """
         cursor = connection.cursor()
         result = cursor.execute(mySql_Create_Table_Query)
         print("Server (" + str(serverID) + ") Table created successfully")
-    
-    # table already exists
     except mysql.connector.Error as error:
         print("Failed to create table in MySql: {}".format(error))
     
-    finally:
-        # insert data into database
+    # insert data into database
+    try:
         if connected and connection.is_connected():
-            
             # setup variables
             table = "DB_" + str(serverID)
-            MySql_Insert_Row_Query = "INSERT INTO " + table + " (User, Currency) VALUES (%s, %s)"
-            MySql_Insert_Row_values = (str(user), data)
+            MySql_Insert_Row_Query = "INSERT INTO " + table + " (UserId, UserStr, Currency) VALUES (%(userId)s, %(userstr)s, %(value)s) ON DUPLICATE KEY UPDATE Currency=%(value)s"
+            MySql_Insert_Row_values = {'userId': int(user.id), 'userstr': str(user), 'value': data}
 
             # insert data
             cursor.execute(MySql_Insert_Row_Query, MySql_Insert_Row_values)
@@ -60,8 +66,11 @@ def storeData(serverID, user, data):
             print("MySQL connection has been closed")
             return True
         else:
-            print("Failed to connect to database")
+            print("Failed to connect to database somehow")
             return False
+    except:
+        print("Failed to insert with {} and {}".format(str(user.id), data))
+        return False
     
     
         
