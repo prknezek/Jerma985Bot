@@ -91,14 +91,55 @@ class Data(commands.Cog) :
     @nextcord.slash_command(name = "store-info", description = "Store some data", guild_ids = [serverId])
     async def store_info (self, interaction : Interaction, message:str):
         serverID = interaction.guild.id
-
         success = storeData(serverID, interaction.user, message)
         if success:
-            await interaction.response.send_message("I have stored your message for you!")
+            await interaction.response.send_message("I have stored your data for you!")
         else:
             await interaction.response.send_message("Uh oh! I'm having trouble connecting right now.")
         
+    @nextcord.slash_command(name = "retrieve-info", description = "Retrieve some data", guild_ids = [serverId])
+    async def retrieve_info (self, interaction : Interaction):        
+
+        serverId = interaction.guild.id
+        table = "DB_" + str(serverId)
+
+        # connect to database
+        connected = False;
+        try:
+            # create connection to sql server
+            connection = mysql.connector.connect(host=HOST,
+                                                database = DATABASE,
+                                                user = USER,
+                                                password = PASSWORD)
+            connected = True;
+        except:
+            print("Failed to connect to database")
+            #return False
+            return
+
+        try:
+            cursor = connection.cursor()
+            
+            MySql_Select_Query = "SELECT * FROM " + table + " WHERE UserId LIKE " + str(interaction.user.id)
+            cursor.execute(MySql_Select_Query)
+
+            record = cursor.fetchall()
+            ReceivedData = []
+            for row in record:
+                ReceivedData.append({"UserId": row[0], "Currency": str(row[2])})
+            
+            await interaction.response.send_message("Your data: {}".format(  ReceivedData[0].get("Currency")    ))
+        except Exception as e:
+            print("Failed to retrieve data: {}".format(e))
+            await interaction.response.send_message("Uh oh! I could not retrieve that data from the database")
         
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+
+
+
 
 
 
