@@ -23,6 +23,17 @@ class Greetings(commands.Cog) :
     async def hello(self, interaction : Interaction):
         await interaction.send("Hello")
 
+    # skullface command
+    @nextcord.slash_command(name="skullface", description="sends multiple skullface emojis", guild_ids=[serverId])
+    async def skullface(self, interaction : Interaction, number: int):
+        if number > 285:
+            number = 285
+            print("reset number")
+        skullfaces = ""
+        for i in range(int(number)):
+            skullfaces = skullfaces + ":skull:"
+        await interaction.send(skullfaces)
+
     # new member join event
     @commands.Cog.listener()
     async def on_member_join(self, member: nextcord.Member) :
@@ -67,8 +78,8 @@ class Greetings(commands.Cog) :
             await message.add_reaction(emoji)
 
         # WE DO A LITTLE TROLLING
-        if message.author.id == 243898181585207296:                        
-            await message.channel.send("THE GREAT PAYTON HAS SENT A MESSAGE");
+        # if message.author.id == 243898181585207296:                        
+        #     await message.channel.send("THE GREAT PAYTON HAS SENT A MESSAGE");
         if "is yeat the best rapper" in message.content :
             await message.channel.send("yes");
         elif "jerma" in message.content and "twizzy" in message.content:
