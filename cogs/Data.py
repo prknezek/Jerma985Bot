@@ -25,14 +25,14 @@ PASSWORD = 'root'
 def storeData(serverID, user, data):
     
     # connect to database
-    connected = False;
+    connected = False
     try:
         # create connection to sql server
         connection = mysql.connector.connect(host=HOST,
                                              database = DATABASE,
                                              user = USER,
                                              password = PASSWORD)
-        connected = True;
+        connected = True
     except:
         print("Failed to connect to database")
         return False
@@ -101,7 +101,7 @@ def storeData(serverID, user, data):
             MYSQL_INSERT_ROW_QUERY += ") VALUES (%(userId)s,%(userstr)s,"
             MySql_Insert_Row_values = {'userId': int(user.id), 'userstr': str(user)}
             # add values
-            i = 0;
+            i = 0
             comma = False
             for col in data.keys():
                 if comma:
@@ -152,14 +152,14 @@ def retrieveData(serverID, user, data):
     table = "DB_" + str(serverID)
 
     # connect to database
-    connected = False;
+    connected = False
     try:
         # create connection to sql server
         connection = mysql.connector.connect(host=HOST,
                                             database = DATABASE,
                                             user = USER,
                                             password = PASSWORD)
-        connected = True;
+        connected = True
     except:
         print("Failed to connect to database")
         return None
