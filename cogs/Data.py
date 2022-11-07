@@ -4,6 +4,7 @@ from nextcord import Interaction
 from apikeys import *
 import requests
 import json
+import oracledb
 
 import mysql.connector
 from mysql.connector import Error
