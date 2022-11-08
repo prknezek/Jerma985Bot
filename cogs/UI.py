@@ -6,7 +6,7 @@ import requests
 
 # load names for birthday messsage
 bdaynames = []
-f = open("./cogs/resources/birthdaynames.txt")
+f = open("Jerma985Bot/cogs/resources/birthdaynames.txt")
 for name in f.readlines():
     bdaynames.append(name.lower()[:-1])
 bdaynames[len(bdaynames)-1] = "zoe"
