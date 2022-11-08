@@ -53,15 +53,6 @@ class Youtube(commands.Cog) :
                 for message in messages :
                     if link in message.content:
                         alreadySent = True
-                    # ur kinda braindead
-                    # if link not in message.content :
-                    #     await channel.send(
-                    #         f"@everyone, **Jerma985** just posted a video!"
-                    #         f"\n{link}"
-                    #         f"\n***({j2_video_published})***"
-                    #     )
-                    # else :
-                    #     pass
                 if alreadySent == False:
                     await channel.send(
                         f"@everyone, **Jerma985** just posted a video!"

@@ -79,15 +79,15 @@ class Greetings(commands.Cog) :
 
         # WE DO A LITTLE TROLLING
         # if message.author.id == 243898181585207296:                        
-        #     await message.channel.send("THE GREAT PAYTON HAS SENT A MESSAGE");
+        #     await message.channel.send("THE GREAT PAYTON HAS SENT A MESSAGE")
         if "is yeat the best rapper" in message.content :
             await message.channel.send("yes")
         elif "jerma" in message.content and "twizzy" in message.content:
-            await message.channel.send("this jerma bot is a certified twizzy");
+            await message.channel.send("this jerma bot is a certified twizzy")
         elif "fr" in message.content :
             await message.channel.send("no cap")
         elif "no cap" in message.content :
-            await message.channel.send("on god");        
+            await message.channel.send("on god")
         elif "ong" in message.content or "on god" in message.content:
             await message.channel.send("no kizzy")
 

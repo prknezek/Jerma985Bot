@@ -76,12 +76,6 @@ class BdayDropdownView(nextcord.ui.View) :
         super().__init__()
         self.add_item(BdayDropdown(name=name))
 
-    # async def on_timeout(self):
-    #     print("clearing")
-    #     self.clear_items()
-        
-    
-
 class UI(commands.Cog) :
     def __init__(self, bot : commands.Bot) :
         self.bot = bot
@@ -130,6 +124,10 @@ class UI(commands.Cog) :
     # async def drop(self, interaction : Interaction) :
     #     view = DropdownView()
     #     await interaction.send("Here's a dropdown", view=view)
+
+    @nextcord.slash_command(name = "wiki", description="Link to Jerma wiki", guild_ids=[serverId])
+    async def wiki_link(self, interaction : Interaction) :
+        await interaction.response.send_message("https://jerma-lore.fandom.com/wiki/Jerma985")
     
 def setup(bot) :
     bot.add_cog(UI(bot))
