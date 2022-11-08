@@ -70,7 +70,7 @@ class UI(commands.Cog) :
         elif view.value :
             print ("You clicked the button")
         else :
-            print ("idk")
+            print ("other option")
     
     @nextcord.slash_command(name="dropdown", description="creates a dropdown", guild_ids=[serverId])
     async def drop(self, interaction : Interaction) :
