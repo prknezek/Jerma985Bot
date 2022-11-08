@@ -53,7 +53,7 @@ async def _get_or_create_voice_client(interaction) :
 API_ROOT = "https://api.uberduck.ai"
 
 # API CALL TO UBERDUCK W/ ERROR CHECKING
-async def query_uberduck(text, voice="jerma985") :
+async def query_uberduck(text, voice="zwf") :
     max_time = 60
     async with aiohttp.ClientSession() as session :
         url = f"{API_ROOT}/speak"
