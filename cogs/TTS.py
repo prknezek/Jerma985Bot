@@ -53,7 +53,7 @@ async def _get_or_create_voice_client(interaction) :
 API_ROOT = "https://api.uberduck.ai"
 
 # API CALL TO UBERDUCK W/ ERROR CHECKING
-async def query_uberduck(text, voice="zwf") :
+async def query_uberduck(text, voice="jerma985") :
     max_time = 60
     async with aiohttp.ClientSession() as session :
         url = f"{API_ROOT}/speak"
@@ -131,12 +131,12 @@ class TTS(commands.Cog) :
 
     @nextcord.slash_command(name = "jtts", description="Text to Speech in Jerma's voice", guild_ids=[serverId])
     async def jerma_tts(self, interaction : Interaction,
-        voice : str = SlashOption(
-            name="voice", description="Voice to use for synthetic speech", required=True
-        ),
         speech : str = SlashOption(
             name="speech", description="Speech to synthesize", required=True
         ),
+        voice : str = SlashOption(
+            required=False, name="voice", description="Voice to use for synthetic speech", default = "jerma985",
+        )
     ) :
         voice_client, _ = await _get_or_create_voice_client(interaction)
         if voice_client :
@@ -144,14 +144,17 @@ class TTS(commands.Cog) :
             await interaction.response.defer(ephemeral=True, with_message=True)
             audio_data = await query_uberduck(speech, voice)
             
-            with tempfile.NamedTemporaryFile(suffix=".wav") as wav_f, tempfile.NamedTemporaryFile(suffix=".opus") as opus_f :
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as wav_f, tempfile.NamedTemporaryFile(suffix=".opus", delete=False) as opus_f :
                 wav_f.write(audio_data.getvalue())
                 wav_f.flush()
                 print(opus_f.name)
                 print(wav_f.name)
                 # ---------CHECK_CALL DOES NOT FUNCTION PROPERLY---------
+                wav_f.close()
+                opus_f.close()
                 subprocess.check_call(["ffmpeg", "-y", "-i", wav_f.name, opus_f.name])
-                source = nextcord.FFmpegOpusAudio(opus_f.name)
+                source = nextcord.FFmpegOpusAudio(wav_f.name)
+                #source = nextcord.FFmpegOpusAudio(opus_f.name)
                 voice_client.play(source, after=None)
                 while voice_client.is_playing() :
                     await asyncio.sleep(0.5)
