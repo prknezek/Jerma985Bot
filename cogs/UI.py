@@ -99,7 +99,7 @@ class UI(commands.Cog) :
             allnames += name[0].upper()+name[1:] + "\n"
         embed = nextcord.Embed(title="List of Supported Names for Birthday Message: ", description=allnames)
         await interaction.user.send(embed=embed)
-        await interaction.send("Sent! Check your DMs.")
+        await interaction.send("Sent! Check your DMs.", ephemeral=True)
 
     @nextcord.slash_command(name="birthday-message", description="sends a personalized jerma birthday message", guild_ids=[serverId])
     async def birthdayMsg(self, interaction : Interaction, name: str = SlashOption(name="name", description="For list of supported names, type /birthday-supported-names")) :
