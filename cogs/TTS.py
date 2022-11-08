@@ -11,6 +11,7 @@ from datetime import datetime, timezone, timedelta
 import subprocess
 import tempfile
 from apikeys import *
+import os
 
 guild_to_voice_client = dict()
 # terminates bot after not being used for 5 minutes
