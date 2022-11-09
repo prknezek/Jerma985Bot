@@ -5,59 +5,43 @@ from nextcord import SlashOption
 import requests
 from random import randint
 
+# Global Variables
+LOCK = "\U0001f512"
+DOLLAR = "\U0001f4b5"
+GEM = "\U0001f48e"
+BOMB = "\U0001f4a3"
+
 class Buttons(nextcord.ui.View) :
     def __init__(self) :
         # timeout means the button wont disappear
         super().__init__(timeout = None)
-        self.value = None
+        self.value = [[0,0,0], 0]
     
-    @nextcord.ui.button(label = "Button", style = nextcord.ButtonStyle.blurple)
+    @nextcord.ui.button(emoji = LOCK)
     async def button(self, button : nextcord.ui.Button, interaction : Interaction) :
         # ephemeral = True means that only user that send that command can see that message
-        await interaction.send("Clicked Button", ephemeral=False)
-        self.value = True # allows us to determine if button is clicked
-        self.stop()
+        # await interaction.send("Clicked Button", ephemeral=False)
+        self.value[0][0] = 1 # allows us to determine if button is clicked
+        self.value[1] += 1
+        button.style = nextcord.ButtonStyle.green
+        button.emoji = BOMB
+        print("changed emoji")
+        #self.stop()
 
-    @nextcord.ui.button(label = "Test", style = nextcord.ButtonStyle.gray)
+    @nextcord.ui.button(emoji = DOLLAR, style = nextcord.ButtonStyle.blurple)
     async def test1(self, button : nextcord.ui.Button, interaction : Interaction) :
-        # ephemeral = True means that only user that send that command can see that message
-        await interaction.send("Clicked Test", ephemeral=False)
-        self.value = False # allows us to determine if button is clicked
-        self.stop()
+        # await interaction.send("Clicked Test", ephemeral=False)
+        self.value[0][1] = 1 # allows us to determine if button is clicked
+        self.value[1] += 1
+        #self.stop()
     
-    @nextcord.ui.button(label = "Test", style = nextcord.ButtonStyle.gray)
+    @nextcord.ui.button(label = BOMB, style = nextcord.ButtonStyle.blurple)
     async def test11(self, button : nextcord.ui.Button, interaction : Interaction) :
-        # ephemeral = True means that only user that send that command can see that message
-        await interaction.send("Clicked Test", ephemeral=False)
-        self.value = False # allows us to determine if button is clicked
-        self.stop()
-
-class Buttons2(nextcord.ui.View) :
-    def __init__(self) :
-        # timeout means the button wont disappear
-        super().__init__(timeout = None)
-        self.value = None
-    
-    @nextcord.ui.button(label = "Button", style = nextcord.ButtonStyle.blurple)
-    async def button(self, button : nextcord.ui.Button, interaction : Interaction) :
-        # ephemeral = True means that only user that send that command can see that message
-        await interaction.send("Clicked Button", ephemeral=False)
-        self.value = True # allows us to determine if button is clicked
-        self.stop()
-
-    @nextcord.ui.button(label = "Test", style = nextcord.ButtonStyle.gray)
-    async def test1(self, button : nextcord.ui.Button, interaction : Interaction) :
-        # ephemeral = True means that only user that send that command can see that message
-        await interaction.send("Clicked Test", ephemeral=False)
-        self.value = False # allows us to determine if button is clicked
-        self.stop()
-    
-    @nextcord.ui.button(label = "Test", style = nextcord.ButtonStyle.gray)
-    async def test11(self, button : nextcord.ui.Button, interaction : Interaction) :
-        # ephemeral = True means that only user that send that command can see that message
-        await interaction.send("Clicked Test", ephemeral=False)
-        self.value = False # allows us to determine if button is clicked
-        self.stop()
+        # await interaction.send("Clicked Test", ephemeral=False)
+        self.value[0][2] = 1 # allows us to determine if button is clicked
+        self.value[1] += 1
+        print(self.value)
+        #self.stop()
 
 class BombGame(commands.Cog):
     def __init__(self, bot : commands.Bot) :
@@ -69,13 +53,13 @@ class BombGame(commands.Cog):
     async def testing_buttons(self, interaction : Interaction) :
         view = Buttons()
         await interaction.send("You have two options", view=view)
-        await interaction.channel.send(view=Buttons2())
+        await interaction.channel.send(view=Buttons())
         await view.wait() # wait for button to be clicked
 
         if view.value is None :
             return
-        elif view.value :
-            print ("You clicked the button")
+        elif view.value == "test":
+            print ("WHAT THE")
         else :
             print ("other option")
 
