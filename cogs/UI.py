@@ -137,7 +137,7 @@ class UI(commands.Cog) :
     async def wiki_link(self, interaction : Interaction) :
         await interaction.response.send_message("https://jerma-lore.fandom.com/wiki/Jerma985")
 
-    @nextcord.slash_command(name = "rwikipage", description="Link to Random Jerma wikipage", guild_ids=[serverId])
+    @nextcord.slash_command(name = "rwikipage", description="Link to a random Jerma wikipage", guild_ids=[serverId])
     async def wiki_link(self, interaction : Interaction) :
         numsites = len(wikisites)
         siteindex = randint(0, numsites-1)
