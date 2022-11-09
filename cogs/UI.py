@@ -3,6 +3,7 @@ from nextcord.ext import commands
 from nextcord import Interaction
 from nextcord import SlashOption
 import requests
+from random import randint
 
 # load names for birthday messsage
 bdaynames = []
@@ -10,6 +11,13 @@ f = open("./cogs/resources/birthdaynames.txt")
 for name in f.readlines():
     bdaynames.append(name.lower()[:-1])
 bdaynames[len(bdaynames)-1] = "zoe"
+f.close()
+
+# load wiki pages
+wikisites = []
+f = open("./cogs/resources/wikisites.txt")
+for site in f.readlines():
+    wikisites.append(str(site).strip())
 f.close()
 
 # test button
@@ -128,6 +136,12 @@ class UI(commands.Cog) :
     @nextcord.slash_command(name = "wiki", description="Link to Jerma wiki", guild_ids=[serverId])
     async def wiki_link(self, interaction : Interaction) :
         await interaction.response.send_message("https://jerma-lore.fandom.com/wiki/Jerma985")
+
+    @nextcord.slash_command(name = "rwikipage", description="Link to Random Jerma wikipage", guild_ids=[serverId])
+    async def wiki_link(self, interaction : Interaction) :
+        numsites = len(wikisites)
+        siteindex = randint(0, numsites-1)
+        await interaction.response.send_message(f"{wikisites[siteindex]}")
     
 def setup(bot) :
     bot.add_cog(UI(bot))
