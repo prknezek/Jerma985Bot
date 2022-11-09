@@ -35,7 +35,14 @@ f.close()
 #         self.stop()
 
 #     @nextcord.ui.button(label = "Test", style = nextcord.ButtonStyle.gray)
-#     async def test(self, button : nextcord.ui.Button, interaction : Interaction) :
+#     async def test1(self, button : nextcord.ui.Button, interaction : Interaction) :
+#         # ephemeral = True means that only user that send that command can see that message
+#         await interaction.send("Clicked Test", ephemeral=False)
+#         self.value = False # allows us to determine if button is clicked
+#         self.stop()
+    
+#     @nextcord.ui.button(label = "Test", style = nextcord.ButtonStyle.gray)
+#     async def test11(self, button : nextcord.ui.Button, interaction : Interaction) :
 #         # ephemeral = True means that only user that send that command can see that message
 #         await interaction.send("Clicked Test", ephemeral=False)
 #         self.value = False # allows us to determine if button is clicked
@@ -119,6 +126,7 @@ class UI(commands.Cog) :
     # async def testing_buttons(self, interaction : Interaction) :
     #     view = Buttons()
     #     await interaction.send("You have two options", view=view)
+    #     await interaction.channel.send(view=Buttons2())
     #     await view.wait() # wait for button to be clicked
 
     #     if view.value is None :
@@ -143,5 +151,5 @@ class UI(commands.Cog) :
         siteindex = randint(0, numsites-1)
         await interaction.response.send_message(f"{wikisites[siteindex]}")
     
-def setup(bot) :
+def setup(bot: commands.Bot) :
     bot.add_cog(UI(bot))
