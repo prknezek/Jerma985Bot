@@ -5,19 +5,7 @@ from nextcord import SlashOption
 import requests
 from random import randint
 import asyncio
-
-# round function - credit to https://medium.com/thefloatingpoint/pythons-round-function-doesn-t-do-what-you-think-71765cfa86a8
-def normal_round(num, ndigits=0):
-    """
-    Rounds a float to the specified number of decimal places.
-    num: the value to round
-    ndigits: the number of digits to round to
-    """
-    if ndigits == 0:
-        return int(num + 0.5)
-    else:
-        digit_value = 10 ** ndigits
-        return int(num * digit_value + 0.5) / digit_value
+import cogs.Data as database
 
 # Global Variables
 LOCK = "\U0001f512"
@@ -115,6 +103,23 @@ class BombGame(commands.Cog):
 
     @nextcord.slash_command(name = "bombtiles", description="A gambling game", guild_ids=[serverId])
     async def bomb_tiles(self, interaction : Interaction, starting_bet:float = SlashOption(name="bet",description="Input an amount to bet")) :
+        
+        # check if starting_bet is valid
+        starting_bet = database.normal_round(starting_bet, 2)
+        if starting_bet <= 0.00:
+            return await interaction.send("Mr. Green - What, you think I'm an idiot?!", ephemeral=True)
+
+        # check balance and take money away from user
+        user_balance_raw = database.retrieveData(interaction.guild.id, interaction.user, ['MONEY'])[0]
+        if user_balance_raw[0] == '$':
+            user_balance = float(user_balance_raw[1:])
+        else:
+            user_balance = float(user_balance_raw)
+        if user_balance < starting_bet:
+            return await interaction.send("Mr. Green - You're too broke to play!", ephemeral=True)
+        user_balance -= starting_bet
+        database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
+
         # send instructions
         embed = nextcord.Embed(title="Bomb Tiles", color=0x508f4a)
         mr_green_url = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen_RosterFace.png/revision/latest/top-crop/width/360/height/360?cb=20210426041715"
@@ -123,8 +128,7 @@ class BombGame(commands.Cog):
                         value="**${:.2f}** has been **withdrawn** from {}'s account!".format(starting_bet, str(interaction.user)))
         await interaction.send(embed=embed)
         #await interaction.send("Welcome to **BOMB TILES**\nClick on the tiles to increase your payout, and watch out for the bombs!")
-
-        # TODO - take money away from user
+        
         #await interaction.channel.send("**${:.2f}** has been **withdrawn** from {}'s account!".format(starting_bet, str(interaction.user)))
 
         #await interaction.channel.send("---------------------------------------------")
@@ -145,8 +149,6 @@ class BombGame(commands.Cog):
         
 
         # randomize bomb location
-        bomb1x = randint(0,2)
-        bomb1y = randint(0,2)
         for i in range(NUM_BOMBS):
             matrix[randint(0,2)][randint(0,2)] = UNPRESSED_BOMB
 
@@ -163,7 +165,8 @@ class BombGame(commands.Cog):
         await interaction.channel.send(view=bar)
         
         # now re-send info message
-        await infoMessage.edit("**Bet:** ${:.2f}  **Multiplier:** {:.2f}x  **Payout:** ${:.2f}".format(bet, multiplier, bet*multiplier))
+        payout = bet*multiplier
+        await infoMessage.edit("**Bet:** ${:.2f}  **Multiplier:** {:.2f}x  **Payout:** ${:.2f}".format(bet, multiplier, payout))
 
         tempcount = 0
         while (tempcount < 9):
@@ -183,8 +186,8 @@ class BombGame(commands.Cog):
 
             #update variables
             if not game_over and not bar.gameover:
-                multiplier = normal_round(multiplier*MULTIPLIER_CONSTANT, 2)
-                payout = normal_round(bet*multiplier, 2)
+                multiplier = database.normal_round(multiplier*MULTIPLIER_CONSTANT, 2)
+                payout = database.normal_round(bet*multiplier, 2)
             elif game_over:
                 payout = 0
 
@@ -219,8 +222,11 @@ class BombGame(commands.Cog):
             tempcount += 1
         
         # TODO - give money with database
+        user_balance += payout
+        database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
+
         stopAllViews()
-        embed = nextcord.Embed(title="Paid", color=0x508f4a, description="**${:.2f}** has been **deposited** to {}'s account!".format(payout, str(interaction.user)))
+        embed = nextcord.Embed(title="Payment", color=0x508f4a, description="**${:.2f}** has been **deposited** to {}'s account!".format(payout, str(interaction.user)))
         embed.set_author(name= "Mr. Green's Casino", icon_url=mr_green_url)
         return await interaction.send(embed=embed)
         #return await interaction.channel.send("**${:.2f}** has been **deposited** to {}'s account!".format(payout, str(interaction.user)))

@@ -4,6 +4,7 @@ from nextcord import Interaction
 from apikeys import *
 import requests
 import json
+import cogs.Data as database
 
 class Greetings(commands.Cog) :
     # ----------initialize cog----------
@@ -37,6 +38,7 @@ class Greetings(commands.Cog) :
     # new member join event
     @commands.Cog.listener()
     async def on_member_join(self, member: nextcord.Member) :
+
         # importing random joke from joke api
         jokeurl = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
 
@@ -54,6 +56,14 @@ class Greetings(commands.Cog) :
         # response.text is in json so we are filtering the setup attribute
         # out of the response and printing it in nextcord
         await member.send(f"{json.loads(response.text)['delivery']}")
+
+        # give new member some money
+        database.storeData(member.guild.id, member, {'money': "30"})
+        embed = nextcord.Embed(title="Bomb Tiles", color=0x508f4a)
+        mr_green_url = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen_RosterFace.png/revision/latest/top-crop/width/360/height/360?cb=20210426041715"
+        embed.set_author(name= "Mr. Green's Casino", icon_url=mr_green_url)
+        embed.add_field(name="Welcome!",value="Here's a gift of $30 from Mr. Green himself!")
+
 
     # when user reacts
     @commands.Cog.listener()

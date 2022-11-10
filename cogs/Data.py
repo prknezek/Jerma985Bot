@@ -14,6 +14,18 @@ DATABASE = 'jerma985bot'
 USER = 'root'
 PASSWORD = 'root'
 
+# round function - credit to https://medium.com/thefloatingpoint/pythons-round-function-doesn-t-do-what-you-think-71765cfa86a8
+def normal_round(num, ndigits=0):
+    """
+    Rounds a float to the specified number of decimal places.
+    num: the value to round
+    ndigits: the number of digits to round to
+    """
+    if ndigits == 0:
+        return int(num + 0.5)
+    else:
+        digit_value = 10 ** ndigits
+        return int(num * digit_value + 0.5) / digit_value
 
 # function to store currency into database
 # returns boolean: True if successful, False if unsuccessful
@@ -125,6 +137,7 @@ def storeData(serverID, user, data):
             # insert data
             cursor.execute(MYSQL_INSERT_ROW_QUERY, MySql_Insert_Row_values)
             connection.commit()                
+            print("stored")
 
             #close connections
             cursor.close()
@@ -213,10 +226,11 @@ class Data(commands.Cog) :
     #   ----------done----------   
 
 
-    @nextcord.slash_command(name = "store-info", description = "Store some data", guild_ids = [serverId])
-    async def store_info (self, interaction : Interaction, message:str):
+    @nextcord.slash_command(name = "set-money", description = "Set money amount for yourself", guild_ids = [serverId])
+    async def set_money (self, interaction : Interaction, amount:float):
+        amount = normal_round(amount, 2)
         serverID = interaction.guild.id
-        success = storeData(serverID, interaction.user, {'MESSAGE': message, 'MONEY': "$30", 'huh': "bruh"})
+        success = storeData(serverID, interaction.user, {'MONEY': amount})
         if success:
             await interaction.response.send_message("I have stored your data for you!")
         else:
@@ -230,6 +244,17 @@ class Data(commands.Cog) :
             for x in data:
                 datastr += str(x)
             await interaction.response.send_message("Your data: {}".format(datastr))
+        else:
+            await interaction.response.send_message("Uh oh! I could not retrieve that data from the database")
+
+    @nextcord.slash_command(name = "balance", description = "Retrieve balance", guild_ids = [serverId])
+    async def retrieve_bal (self, interaction : Interaction):        
+        data = retrieveData(interaction.guild.id, interaction.user, ('money',))                
+        if data != None:
+            datastr = ""
+            for x in data:
+                datastr += str(x)
+            await interaction.response.send_message("Your data: ${:.2f}".format(float(datastr)))
         else:
             await interaction.response.send_message("Uh oh! I could not retrieve that data from the database")
         
