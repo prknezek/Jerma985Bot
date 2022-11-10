@@ -226,7 +226,7 @@ class BombGame(commands.Cog):
         database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
 
         stopAllViews()
-        embed = nextcord.Embed(title="Payment", color=0x508f4a, description="**${:.2f}** has been **deposited** to {}'s account!".format(payout, str(interaction.user)))
+        embed = nextcord.Embed(title="Payment", color=0x508f4a, description="**${:.2f}** has been **deposited** to {}'s account!\nTotal Balance: **${:.2f}**".format(payout, str(interaction.user), user_balance))
         embed.set_author(name= "Mr. Green's Casino", icon_url=mr_green_url)
         return await interaction.send(embed=embed)
         #return await interaction.channel.send("**${:.2f}** has been **deposited** to {}'s account!".format(payout, str(interaction.user)))
