@@ -39,8 +39,12 @@ class Tile(nextcord.ui.Button):
             super().__init__(style=nextcord.ButtonStyle.blurple, emoji=LOCK)
         elif typeint == PRESSED_MONEY:
             super().__init__(style=nextcord.ButtonStyle.green, emoji=DOLLAR)
-        else: # typeint == PRESSED_BOMB
+        elif typeint == PRESSED_BOMB:
             super().__init__(style=nextcord.ButtonStyle.red, emoji=BOMB)
+        elif typeint == 4: # show all in grey
+            super().__init__(style=nextcord.ButtonStyle.grey, emoji=DOLLAR)
+        elif typeint == 5: # show all in grey
+            super().__init__(style=nextcord.ButtonStyle.grey, emoji=BOMB)
 
         self.index = index
 
@@ -105,12 +109,15 @@ class BombGame(commands.Cog):
     async def bomb_tiles(self, interaction : Interaction, starting_bet:float = SlashOption(name="bet",description="Input an amount to bet")) :
         
         # check if starting_bet is valid
-        starting_bet = database.normal_round(starting_bet, 2)
+        starting_bet = database.normal_round(starting_bet, 2)        
         if starting_bet <= 0.00:
             return await interaction.send("What, you think I'm an idiot?! - Mr. Green", ephemeral=True)
 
         # check balance and take money away from user
-        user_balance_raw = database.retrieveData(interaction.guild.id, interaction.user, ['MONEY'])[0]
+        try:
+            user_balance_raw = database.retrieveData(interaction.guild.id, interaction.user, ['MONEY'])[0]
+        except:
+            return await interaction.send("Uh oh! I couldn't connect to the database.")
         if user_balance_raw[0] == '$':
             user_balance = float(user_balance_raw[1:])
         else:
@@ -144,8 +151,17 @@ class BombGame(commands.Cog):
         
 
         # randomize bomb location
+        bombLocations = []
         for i in range(NUM_BOMBS):
-            matrix[randint(0,2)][randint(0,2)] = UNPRESSED_BOMB
+            bombx = randint(0,2)
+            bomby = randint(0,2)
+            bombLoc = (bombx, bomby)
+            while bombLoc in bombLocations:
+                bombx = randint(0,2)
+                bomby = randint(0,2)
+                bombLoc = (bombx, bomby)
+            bombLocations.append(bombLoc)
+            matrix[bombx][bomby] = UNPRESSED_BOMB
 
         # create and send views
         i = 0
@@ -191,6 +207,15 @@ class BombGame(commands.Cog):
                 await infoMessage.edit(content="collecting your funds...")
             else:
                 await infoMessage.edit(content="rigging your game...")
+
+            # show all tiles in matrix if game over
+            if game_over or bar.gameover:
+                for x in range(len(matrix)):
+                    for y in range(len(matrix[0])):
+                        if matrix[x][y] == UNPRESSED_BOMB or matrix[x][y] == UNPRESSED_MONEY:
+                            matrix[x][y] += 4
+
+
             #for x in viewMessages:
                 #await x.edit(content="...", view=None)
             print("sleeping...")
