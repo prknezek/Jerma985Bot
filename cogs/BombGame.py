@@ -107,7 +107,7 @@ class BombGame(commands.Cog):
         # check if starting_bet is valid
         starting_bet = database.normal_round(starting_bet, 2)
         if starting_bet <= 0.00:
-            return await interaction.send("Mr. Green - What, you think I'm an idiot?!", ephemeral=True)
+            return await interaction.send("What, you think I'm an idiot?! - Mr. Green", ephemeral=True)
 
         # check balance and take money away from user
         user_balance_raw = database.retrieveData(interaction.guild.id, interaction.user, ['MONEY'])[0]
@@ -116,7 +116,7 @@ class BombGame(commands.Cog):
         else:
             user_balance = float(user_balance_raw)
         if user_balance < starting_bet:
-            return await interaction.send("Mr. Green - You're too broke to play!", ephemeral=True)
+            return await interaction.send("You're too broke to play! - Mr. Green", ephemeral=True)
         user_balance -= starting_bet
         database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
 
@@ -124,14 +124,9 @@ class BombGame(commands.Cog):
         embed = nextcord.Embed(title="Bomb Tiles", color=0x508f4a)
         mr_green_url = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen_RosterFace.png/revision/latest/top-crop/width/360/height/360?cb=20210426041715"
         embed.set_author(name= "Mr. Green's Casino", icon_url=mr_green_url)
-        embed.add_field(name="Click on the tiles to increase your payout, and watch out for the bombs!\n------------------------------------------------------------------------------------", 
+        embed.add_field(name="Click on the tiles to increase your payout, but watch out for the bombs!\n------------------------------------------------------------------------------------", 
                         value="**${:.2f}** has been **withdrawn** from {}'s account!".format(starting_bet, str(interaction.user)))
         await interaction.send(embed=embed)
-        #await interaction.send("Welcome to **BOMB TILES**\nClick on the tiles to increase your payout, and watch out for the bombs!")
-        
-        #await interaction.channel.send("**${:.2f}** has been **withdrawn** from {}'s account!".format(starting_bet, str(interaction.user)))
-
-        #await interaction.channel.send("---------------------------------------------")
 
         # send bet info
         bet = starting_bet
@@ -168,8 +163,8 @@ class BombGame(commands.Cog):
         payout = bet*multiplier
         await infoMessage.edit("**Bet:** ${:.2f}  **Multiplier:** {:.2f}x  **Payout:** ${:.2f}".format(bet, multiplier, payout))
 
-        tempcount = 0
-        while (tempcount < 9):
+        count = 0
+        while (count < (len(matrix)*len(matrix[0]))-NUM_BOMBS):
             # wait till interaction
             print("waiting...")
             await views[0].wait()
@@ -219,7 +214,7 @@ class BombGame(commands.Cog):
             if game_over or bar.gameover:
                 break
             
-            tempcount += 1
+            count += 1
         
         # TODO - give money with database
         user_balance += payout
@@ -229,8 +224,6 @@ class BombGame(commands.Cog):
         embed = nextcord.Embed(title="Payment", color=0x508f4a, description="**${:.2f}** has been **deposited** to {}'s account!\nTotal Balance: **${:.2f}**".format(payout, str(interaction.user), user_balance))
         embed.set_author(name= "Mr. Green's Casino", icon_url=mr_green_url)
         return await interaction.send(embed=embed)
-        #return await interaction.channel.send("**${:.2f}** has been **deposited** to {}'s account!".format(payout, str(interaction.user)))
-
         
 
     @commands.Cog.listener()
