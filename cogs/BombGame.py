@@ -209,7 +209,7 @@ class BombGame(commands.Cog):
                 await infoMessage.edit(content="rigging your game...")
 
             # show all tiles in matrix if game over
-            if game_over or bar.gameover:
+            if game_over or bar.gameover or count == (len(matrix)*len(matrix[0]))-NUM_BOMBS-1:
                 for x in range(len(matrix)):
                     for y in range(len(matrix[0])):
                         if matrix[x][y] == UNPRESSED_BOMB or matrix[x][y] == UNPRESSED_MONEY:
