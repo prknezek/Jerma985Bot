@@ -1,10 +1,12 @@
-import nextcord
-from nextcord.ext import tasks, commands
-from nextcord import Interaction
-from apikeys import *
-from twitchAPI.twitch import Twitch
-import requests
 from random import randint
+
+import nextcord
+import requests
+from nextcord import Interaction
+from nextcord.ext import commands, tasks
+from twitchAPI.twitch import Twitch
+
+from apikeys import *
 
 # authentication w/ Twitch API
 client_id = TWITCH_CLIENT_ID
@@ -153,9 +155,10 @@ class Livestream(commands.Cog) :
         embed.set_footer(text=f"Sent by: {user}")
         await interaction.send(embed=embed)
 
-    @nextcord.slash_command(name="twitch", description="sends link to Jerma985's twitch", guild_ids=[serverId])
+    @nextcord.slash_command(name="twitch", description="Sends a link to Jerma985's twitch", guild_ids=[serverId])
     async def twitch(self, interaction : Interaction) :
         await interaction.send("https://twitch.tv/jerma985")
         
+# export cog to bot
 def setup(bot: commands.Bot) :
     bot.add_cog(Livestream(bot))

@@ -1,7 +1,7 @@
-from googleapiclient.discovery import build
 import nextcord
+from googleapiclient.discovery import build
 from nextcord.ext import commands, tasks
-from nextcord import Interaction
+
 from apikeys import *
 
 # building base youtube api
@@ -67,5 +67,6 @@ class Youtube(commands.Cog) :
     async def youtube(self, ctx) :
         await ctx.send("https://youtube.com/2ndJerma")
 
+# export cog to bot
 def setup(bot: commands.Bot) :
     bot.add_cog(Youtube(bot))

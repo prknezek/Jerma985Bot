@@ -1,24 +1,25 @@
 import asyncio
-import nextcord
-from nextcord.ext import commands
-from nextcord import Interaction
 import os
 
-from apikeys import * # imports variables from local apikeys.py
+import nextcord
+from nextcord.ext import commands
+
+from apikeys import *  # imports variables from local apikeys.py
 
 intents = nextcord.Intents.all() # make sure commands work
 intents.members = True
 intents.voice_states = True
-COMMAND_PREFIX = '!' # initialize bot with command prefix '!'
+COMMAND_PREFIX = '!' # initialize bot with command prefix '!' (OUTDATED with nextcord but still required)
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
 
 @bot.event
 async def on_ready() :
     print("Jerma Bot Online")
 
+# current test server
 serverId = 1033811091828002817
 
-# cog loading
+# -------------------------------- cog loading ------------------------------- #
 async def load() :
     for filename in os.listdir("./cogs") :
         if filename.endswith('.py') :

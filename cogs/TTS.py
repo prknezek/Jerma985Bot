@@ -1,17 +1,17 @@
-from io import BytesIO
-import json
-import time
-import aiohttp
 import asyncio
-import nextcord
-from nextcord import SlashOption
-from nextcord.ext import commands
-from nextcord import Interaction
-from datetime import datetime, timezone, timedelta
+import json
 import subprocess
 import tempfile
+import time
+from datetime import datetime, timedelta, timezone
+from io import BytesIO
+
+import aiohttp
+import nextcord
+from nextcord import Interaction, SlashOption
+from nextcord.ext import commands
+
 from apikeys import *
-import os
 
 guild_to_voice_client = dict()
 # terminates bot after not being used for 5 minutes
