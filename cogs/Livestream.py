@@ -95,7 +95,7 @@ class Livestream(commands.Cog) :
                             )
             else : # if they aren't live:
                 async for message in channel.history(limit=200) :
-                    if "Jerma985 is live on Twitch!" in message.content :
+                    if "is live on Twitch!" in message.content :
                         await message.delete()
 
             # if jerma is live change status
