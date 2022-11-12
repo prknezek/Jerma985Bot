@@ -1,10 +1,13 @@
-import nextcord
-from nextcord.ext import commands
-from nextcord import Interaction
-from apikeys import *
-import requests
 import json
+
+import nextcord
+import requests
+from nextcord import Interaction
+from nextcord.ext import commands
+
 import cogs.Data as database
+from apikeys import *
+
 
 class Greetings(commands.Cog) :
     # ----------initialize cog----------
