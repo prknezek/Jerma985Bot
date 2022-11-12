@@ -238,11 +238,11 @@ def retrieveData(serverID, user, data):
             connection.close()
 
 
-
+# ---------------------------------------------------------------------------- #
+#                                  main class                                  #
+# ---------------------------------------------------------------------------- #
 class Data(commands.Cog) :
-    # ---------------------------------------------------------------------------- #
-    #                                initialize cog                                #
-    # ---------------------------------------------------------------------------- #
+    # --------------------------------- initalize -------------------------------- #
     def __init__(self, bot: commands.Bot) :
         self.bot = bot
 
@@ -253,9 +253,7 @@ class Data(commands.Cog) :
         print("Data Cog Loaded")
 
 
-    # ---------------------------------------------------------------------------- #
-    #                               set-money command                              #
-    # ---------------------------------------------------------------------------- #
+    # ----------------------------- set money command ---------------------------- #
     @nextcord.slash_command(name = "set-money", description = "Set money amount for yourself", guild_ids = [serverId])
     async def set_money (self, interaction : Interaction, amount:float):
         amount = normal_round(amount, 2)
@@ -266,9 +264,7 @@ class Data(commands.Cog) :
         else:
             await interaction.response.send_message("Uh oh! I'm having trouble connecting right now.")
     
-    # ---------------------------------------------------------------------------- #
-    #                        retrieve info command (general)                       #
-    # ---------------------------------------------------------------------------- #
+    # ---------------------- retrieve info command (general) --------------------- #
     @nextcord.slash_command(name = "retrieve-info", description = "Retrieve some data", guild_ids = [serverId])
     async def retrieve_info (self, interaction : Interaction, attribute:str):        
         data = retrieveData(interaction.guild.id, interaction.user, (attribute,))                
@@ -280,9 +276,7 @@ class Data(commands.Cog) :
         else:
             await interaction.response.send_message("Uh oh! I could not retrieve that data from the database")
 
-    # ---------------------------------------------------------------------------- #
-    #                               retrieve balance                               #
-    # ---------------------------------------------------------------------------- #
+    # ----------------------------- retrieve balance ----------------------------- #
     @nextcord.slash_command(name = "balance", description = "Retrieve balance", guild_ids = [serverId])
     async def retrieve_bal (self, interaction : Interaction):        
         data = retrieveData(interaction.guild.id, interaction.user, ('money',))                

@@ -14,6 +14,7 @@ client_secret = TWITCH_CLIENT_SECRET_ID
 twitch = Twitch(client_id, client_secret)
 twitch.authenticate_app([])
 
+
 body = {
     'client_id': client_id,
     'client_secret': client_secret,
@@ -27,6 +28,11 @@ API_HEADERS = {
     'Client-ID' : client_id,
     'Authorization': 'Bearer ' + keys['access_token']
 }
+
+CHANNEL_ID = 23936415
+emotereq = requests.get("https://api.twitch.tv/helix/chat/emotes?broadcaster_id=141981764", headers=API_HEADERS)
+emotejson = emotereq.json()
+print(emotejson)
 
 # returns true if streamer is online and false if not online
 def check_user(user):

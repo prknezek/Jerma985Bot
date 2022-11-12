@@ -12,14 +12,14 @@ intents.voice_states = True
 COMMAND_PREFIX = '!' # initialize bot with command prefix '!' (OUTDATED with nextcord but still required)
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
 
+# current test server
+serverId = 1033811091828002817
+
 @bot.event
 async def on_ready() :
     print("Jerma Bot Online")
 
-# current test server
-serverId = 1033811091828002817
-
-# -------------------------------- cog loading ------------------------------- #
+# cog loading
 async def load() :
     for filename in os.listdir("Jerma985Bot/cogs") :
         if filename.endswith('.py') :
