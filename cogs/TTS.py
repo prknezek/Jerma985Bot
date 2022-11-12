@@ -150,7 +150,6 @@ class TTS(commands.Cog) :
                 wav_f.flush()
                 print(opus_f.name)
                 print(wav_f.name)
-                # ---------CHECK_CALL DOES NOT FUNCTION PROPERLY---------
                 wav_f.close()
                 opus_f.close()
                 subprocess.check_call(["ffmpeg", "-y", "-i", wav_f.name, opus_f.name])
