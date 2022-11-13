@@ -197,6 +197,8 @@ class Blackjack(commands.Cog) :
                 if i % 2 == 0 :
                     for_player = True
                 player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
+                if hidden_card_name != None :
+                    dealer_hidden_card = hidden_card_name
                 if i == 0 :
                     msg = await interaction.send(embed=embed, file=table_file)
                 else :
@@ -206,19 +208,18 @@ class Blackjack(commands.Cog) :
                         await msg.edit(embed=embed, file=table_file)
 
                     
-            player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
-            msg = await interaction.send(embed=embed, file=table_file)
-            player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, True, player_cards, dealer_cards, player_value, dealer_value)
-            await msg.edit(embed=embed, file=table_file)
+            #player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
+            #msg = await interaction.send(embed=embed, file=table_file)
+            #player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, True, player_cards, dealer_cards, player_value, dealer_value)
+            #await msg.edit(embed=embed, file=table_file)
             # get dealer hidden card
-            if hidden_card_name != None :
-                dealer_hidden_card = hidden_card_name
-
-            player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
-            await msg.edit(embed=embed, file=table_file)
-            player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
             
-            await msg.edit(embed=embed, view=view, file=table_file)
+
+            #player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
+            #await msg.edit(embed=embed, file=table_file)
+            #player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
+            
+            #await msg.edit(embed=embed, view=view, file=table_file)
             
             # debugging
             for card in player_cards :
