@@ -49,10 +49,10 @@ class Slots(commands.Cog) :
         database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
         
 
-        felt_img = Image.open("./cogs/resources/transparentbg.png")
-        felt_edit = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT))
-        felt_edit.paste(felt_img)
-        felt_file = blackjack.convert_to_file(felt_edit)
+        bg_img = Image.open("./cogs/resources/transparentbg.png")
+        emotes_img = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT))
+        emotes_img.paste(bg_img)
+        emotes_file = blackjack.convert_to_file(emotes_img)
 
         # ----------------------------- send instructions ---------------------------- #
         embed = nextcord.Embed(title="Slots", color=0x508f4a)
@@ -63,7 +63,7 @@ class Slots(commands.Cog) :
         embed.add_field(name="Slot 2", value="rolling...", inline=True)
         embed.add_field(name="Slot 3", value="rolling...", inline=True)
         embed.set_image(url="attachment://table.png")
-        message = await interaction.send(embed=embed, file=felt_file)
+        message = await interaction.send(embed=embed, file=emotes_file)
 
         imgIndexList = []
         xcords = [0, 150, 316]
@@ -79,14 +79,14 @@ class Slots(commands.Cog) :
             coordinates = (xcords[fieldIndex-1], 0)
             print(coordinates)
 
-            felt_img = Image.open("./cogs/resources/transparentbg.png")
-            #felt_edit = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT))
+            bg_img = Image.open("./cogs/resources/transparentbg.png")
+            #emotes_img = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT))
 
             slot_img = Image.open(requests.get(emote_images_url[imgIndex], stream=True).raw)
-            felt_edit.paste(slot_img, coordinates)
-            felt_file = blackjack.convert_to_file(felt_edit)
+            emotes_img.paste(slot_img, coordinates)
+            emotes_file = blackjack.convert_to_file(emotes_img)
 
-            await message.edit(embed=embed, file=felt_file)
+            await message.edit(embed=embed, file=emotes_file)
 
         await asyncio.sleep(0.7)
 
