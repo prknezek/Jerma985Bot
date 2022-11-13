@@ -72,6 +72,8 @@ def storeData(serverID, user, data):
 
         try:
             # fetch current column names from database            
+            cursor.execute("SELECT * FROM " + table + " WHERE 1")
+            record = cursor.fetchall()
             cols = [i[0] for i in cursor.description]            
             
             # create query
@@ -284,7 +286,7 @@ class Data(commands.Cog) :
             datastr = ""
             for x in data:
                 datastr += str(x)
-            await interaction.response.send_message("Your data: ${:.2f}".format(float(datastr)))
+            await interaction.response.send_message("Your balance: ${:.2f}".format(float(datastr)))
         else:
             await interaction.response.send_message("Uh oh! I could not retrieve that data from the database")
         
