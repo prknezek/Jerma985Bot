@@ -29,10 +29,25 @@ API_HEADERS = {
     'Authorization': 'Bearer ' + keys['access_token']
 }
 
+# ---------------------------------- Emote Request ---------------------------------- #
 CHANNEL_ID = 23936415
-emotereq = requests.get("https://api.twitch.tv/helix/chat/emotes?broadcaster_id=141981764", headers=API_HEADERS)
-emotejson = emotereq.json()
-print(emotejson)
+emotereq = requests.get(f"https://api.twitch.tv/helix/chat/emotes?broadcaster_id={CHANNEL_ID}", headers=API_HEADERS)
+emotejson = emotereq.json()['data']
+emote_images_url = []
+slots_emotes_ids = ["156952", "1279967", "160423", "87845", "1279994", "1279975", "79428", "1096266", "279998"]
+for img in emotejson :
+    # getting image url and changing to dark mode then adding to list of images
+    img_url = img['images']['url_2x']
+    dark_img_url = img_url.replace("light", "dark")
+    # if img_url is one of the ones we want, add image to list
+    for id in slots_emotes_ids :
+        if id in dark_img_url :
+            emote_images_url.append(dark_img_url)
+
+for img in emote_images_url :
+    print(img)
+
+print(f"-------------- Num of emotes: {len(emote_images_url)} --------------")
 
 # returns true if streamer is online and false if not online
 def check_user(user):
