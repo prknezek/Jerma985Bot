@@ -22,7 +22,7 @@ IMG_HEIGHT = 60
 #                                  main class                                  #
 # ---------------------------------------------------------------------------- #
 class Slots(commands.Cog) :
-    
+
     # --------------------------------- initalize -------------------------------- #
     def __init__(self, bot : commands.Bot) :
         self.bot = bot
@@ -77,7 +77,7 @@ class Slots(commands.Cog) :
 
         # ----------- loop through and edit embed fields for each slot roll ---------- #
         imgIndexList = []
-        xcords = [0, 150, 316]
+        xcords = [0, 158, 316]
         for fieldIndex in range(1,len(embed.fields)):
 
             await asyncio.sleep(fieldIndex/2+0.5)
@@ -86,7 +86,7 @@ class Slots(commands.Cog) :
             imgIndex = randint(0,4)
             imgIndexList.append(imgIndex)
             embed.remove_field(fieldIndex)
-            embed.insert_field_at(fieldIndex, name=f"Slot {fieldIndex}", value=f"{imgIndex}", inline=True)            
+            embed.insert_field_at(fieldIndex, name=f"Slot {fieldIndex}", value="_ _", inline=True)            
             
             # --------------------------------- edit file -------------------------------- #
             coordinates = (xcords[fieldIndex-1], 0)
