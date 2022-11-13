@@ -68,9 +68,9 @@ def convert_to_file(im) :
     return nextcord.File(bytes, filename=f"table.png")
 
 # returns table image and card to update table in embed
-def table_update(table : Image, card_name : Stack, num_player_cards : int, num_dealer_cards : int, is_player_card : bool, player_cards : Image, dealer_cards : Image) :
+def table_update(table : Image, card_name : str, num_player_cards : int, num_dealer_cards : int, is_player_card : bool, player_cards : Image, dealer_cards : Image) :
     # get each cards file name
-    card_file_name = str(card_name).replace(" ", "_").lower() + ".png"
+    card_file_name = card_name.replace(" ", "_").lower() + ".png"
     big_card = Image.open(f"./cogs/resources/PNG-cards-1.3/{card_file_name}")
     # if one card on stack
     if num_player_cards == 1 :
@@ -102,32 +102,50 @@ def table_update(table : Image, card_name : Stack, num_player_cards : int, num_d
     # return table
     return (table, big_card)
 
-async def card_deal(table : Image, embed : nextcord.Embed, view : BlackJackDropdownView, deck : Deck, for_player : bool, num_player_cards : int, num_dealer_cards : int, dealer_cards : Image, player_cards : Image, hidden_card : bool) :
-    card_name = deck.deal()
+async def card_deal(table : Image, embed : nextcord.Embed, view : BlackJackDropdownView, deck : Deck, for_player : bool, num_player_cards : int, 
+                    num_dealer_cards : int, dealer_card_image : Image, player_card_image : Image, hidden_card : bool, player_cards : list, dealer_cards : list,
+                    player_value : int, dealer_value : int) :
+    card_name = str(deck.deal())
+    card_value = get_card_value(card_name)
+
     if for_player :
+        player_value += card_value
         num_player_cards += 1
     else :
+        dealer_value += card_value
         num_dealer_cards += 1
     # if the card is hidden
     if hidden_card :
-        hidden_card_name = str(card_name)
+        hidden_card_name = card_name
         card_name = "back card"
     else :
         hidden_card_name = None
 
-    table, card = table_update(table, card_name, num_player_cards, num_dealer_cards, for_player, player_cards, dealer_cards)
+    table, card = table_update(table, card_name, num_player_cards, num_dealer_cards, for_player, player_card_image, dealer_card_image)
     table_file = convert_to_file(table)
 
     if for_player :
-        player_cards = card
+        player_card_image = card
+        player_cards.append(card_name)
     else :
-        dealer_cards = card
-    await asyncio.sleep(1)
-    return (player_cards, dealer_cards, num_player_cards, num_dealer_cards, table_file, hidden_card_name)
+        dealer_card_image = card
+        if card_name == "back card" :
+            dealer_cards.append(hidden_card_name)
+        else :
+            dealer_cards.append(card_name)
 
-#def get_card_value(card) :
-#    match card :
-#        case 
+    #await asyncio.sleep(1)
+    return (player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name)
+
+def get_card_value(card : str) :
+
+    if "10" not in card and card[0].isdigit() :
+        card_value = int(card[0])
+    elif "ace" in card :
+        card_value = 11
+    else:
+        card_value = 10
+    return card_value
 
 class Blackjack(commands.Cog) :
     def __init__(self, bot : commands.Bot) :
@@ -151,9 +169,11 @@ class Blackjack(commands.Cog) :
         num_dealer_cards = 0
         player_value = 0
         dealer_value = 0
-        player_cards = None
-        dealer_cards = None
+        player_card_image = None
+        dealer_card_image = None
         dealer_hidden_card = None
+        player_cards = []
+        dealer_cards = []
 
         # initial creation of embed (deal cards to dealer and player)
         view = BlackJackDropdownView()
@@ -168,19 +188,46 @@ class Blackjack(commands.Cog) :
         table = create_table()
 
         while not end_game :
-            player_cards, dealer_cards, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_cards, player_cards, False)
-            msg = await interaction.send(embed=embed, view=view, file=table_file)
-            player_cards, dealer_cards, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_cards, player_cards, True)
-            await msg.edit(embed=embed, view=view, file=table_file)
+            # starting hand
+            for i in range(4) :
+                for_player = False
+                hidden_card = False
+                if i == 1:
+                    hidden_card = True
+                if i % 2 == 0 :
+                    for_player = True
+                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
+                if i == 0 :
+                    msg = await interaction.send(embed=embed, file=table_file)
+                else :
+                    if i == 3:
+                        await msg.edit(embed=embed, view=view, file=table_file)
+                    else :
+                        await msg.edit(embed=embed, file=table_file)
+
+                    
+            player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
+            msg = await interaction.send(embed=embed, file=table_file)
+            player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, True, player_cards, dealer_cards, player_value, dealer_value)
+            await msg.edit(embed=embed, file=table_file)
             # get dealer hidden card
             if hidden_card_name != None :
                 dealer_hidden_card = hidden_card_name
 
-            player_cards, dealer_cards, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_cards, player_cards, False)
+            player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
+            await msg.edit(embed=embed, file=table_file)
+            player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
+            
             await msg.edit(embed=embed, view=view, file=table_file)
-            player_cards, dealer_cards, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_cards, player_cards, False)
-            await msg.edit(embed=embed, view=view, file=table_file)
+            
+            # debugging
+            for card in player_cards :
+                print (card)
+            for card in dealer_cards :
+                print (card)
 
+            print(player_value)
+            print(dealer_value)
             end_game = True
 
 def setup(bot: commands.Bot) :

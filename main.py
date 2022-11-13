@@ -21,7 +21,7 @@ async def on_ready() :
 
 # cog loading
 async def load() :
-    for filename in os.listdir("Jerma985Bot/cogs") :
+    for filename in os.listdir("./cogs") :
         if filename.endswith('.py') :
             print(f"Loading {filename[:-3]}")
             bot.load_extension(f"cogs.{filename[:-3]}")
