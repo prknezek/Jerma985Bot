@@ -11,13 +11,13 @@ from PIL import Image
 import PIL
 from nextcord import Message
 
-# global vars
+# --------------------------------- global vars --------------------------------- #
 MR_GREEN_URL = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen_RosterFace.png/revision/latest/top-crop/width/360/height/360?cb=20210426041715"
 TABLE_WIDTH = 500
 TABLE_HEIGHT = 330
 VERTICAL_PADDING = 10
 
-# dropdown for betting options
+# --------------------------------- dropdown options --------------------------------- #
 class BlackjackDropdown(nextcord.ui.Select) :
     def __init__(self) :
         select_options = [nextcord.SelectOption(label="Hit", value=0, description="Get another card from the dealer"),
@@ -31,25 +31,25 @@ class BlackjackDropdown(nextcord.ui.Select) :
         elif self.values[0] == 1 :
             return None
 
-# displays dropdown menu
+# --------------------------------- dropdown display --------------------------------- #
 class BlackJackDropdownView(nextcord.ui.View) :
     def __init__(self) :
         super().__init__()
         self.add_item(BlackjackDropdown())
 
-# creating table for cards
+# --------------------------------- initial table creation --------------------------------- #
 def create_table() :    
     table = Image.new("RGB", (TABLE_WIDTH, TABLE_HEIGHT))
     felt = Image.open(f"./cogs/resources/PNG-cards-1.3/felt.png")
     table.paste(felt)
     return table
-
+# --------------------------------- resize cards to correct size --------------------------------- #
 def resize_card(im, num_cards_dealt) :
     base_width = 85 + (10 * num_cards_dealt)
     hsize = 121
     return im.resize((base_width, hsize), PIL.Image.ANTIALIAS)
 
-# merge two images together
+# --------------------------------- merge two cards into a pile --------------------------------- #
 def merge(im1, im2) :
     w = im1.size[0] + im2.size[0]
     h = max(im1.size[1], im2.size[1])
@@ -67,7 +67,7 @@ def convert_to_file(im) :
     bytes.seek(0)
     return nextcord.File(bytes, filename=f"table.png")
 
-# returns table image and card to update table in embed
+# --------------------------------- updates table image --------------------------------- #
 def table_update(table : Image, card_name : str, num_player_cards : int, num_dealer_cards : int, is_player_card : bool, player_cards : Image, dealer_cards : Image) :
     # get each cards file name
     card_file_name = card_name.replace(" ", "_").lower() + ".png"
@@ -102,6 +102,7 @@ def table_update(table : Image, card_name : str, num_player_cards : int, num_dea
     # return table
     return (table, big_card)
 
+# --------------------------------- deals card --------------------------------- #
 async def card_deal(table : Image, embed : nextcord.Embed, view : BlackJackDropdownView, deck : Deck, for_player : bool, num_player_cards : int, 
                     num_dealer_cards : int, dealer_card_image : Image, player_card_image : Image, hidden_card : bool, player_cards : list, dealer_cards : list,
                     player_value : int, dealer_value : int) :
@@ -114,7 +115,6 @@ async def card_deal(table : Image, embed : nextcord.Embed, view : BlackJackDropd
     else :
         dealer_value += card_value
         num_dealer_cards += 1
-    # if the card is hidden
     if hidden_card :
         hidden_card_name = card_name
         card_name = "back card"
@@ -134,19 +134,21 @@ async def card_deal(table : Image, embed : nextcord.Embed, view : BlackJackDropd
         else :
             dealer_cards.append(card_name)
 
-    #await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
     return (player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name)
 
+# --------------------------------- gets value of card --------------------------------- #
 def get_card_value(card : str) :
 
     if "10" not in card and card[0].isdigit() :
         card_value = int(card[0])
-    elif "ace" in card :
+    elif "Ace" in card :
         card_value = 11
     else:
         card_value = 10
     return card_value
 
+# --------------------------------- main Blackjack game --------------------------------- #
 class Blackjack(commands.Cog) :
     def __init__(self, bot : commands.Bot) :
         self.bot = bot
