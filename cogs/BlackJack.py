@@ -110,16 +110,14 @@ def table_update(table : Image, card_name : str, num_player_cards : int, num_dea
 
 # --------------------------------- deals card --------------------------------- #
 async def card_deal(table : Image, deck : Deck, for_player : bool, num_player_cards : int, num_dealer_cards : int, dealer_card_image : Image, player_card_image : Image,
-                     hidden_card : bool, player_cards : list, dealer_cards : list, player_value : int, dealer_value : int) :
+                     hidden_card : bool, player_cards : list, dealer_cards : list, player_value : int, dealer_value : int, num_player_aces : int, num_dealer_aces : int) :
     card_name = str(deck.deal())
     print(f"card that was dealt: {card_name}")
-    card_value = get_card_value(card_name)
+    player_value, dealer_value, num_player_aces, num_dealer_aces = get_card_value(card_name, player_value, dealer_value, for_player, num_player_aces, num_dealer_aces)
 
     if for_player :
-        player_value += card_value
         num_player_cards += 1
     else :
-        dealer_value += card_value
         num_dealer_cards += 1
     if hidden_card :
         hidden_card_name = card_name
@@ -140,19 +138,45 @@ async def card_deal(table : Image, deck : Deck, for_player : bool, num_player_ca
         else :
             dealer_cards.append(card_name)
 
-    await asyncio.sleep(0.5)
-    return (player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name)
+    await asyncio.sleep(1)
+    return (player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name, num_player_aces, num_dealer_aces)
 
 # --------------------------------- gets value of card --------------------------------- #
-def get_card_value(card : str) :
+def get_card_value(card : str, player_value : int, dealer_value : int, for_player : bool, num_player_aces : int, num_dealer_aces : int) :
 
     if "10" not in card and card[0].isdigit() :
         card_value = int(card[0])
     elif "Ace" in card :
         card_value = 11
+        if for_player :
+            num_player_aces += 1
+        else :
+            num_dealer_aces += 1
     else:
         card_value = 10
-    return card_value
+
+    # add card value to player or dealer values
+    if for_player :
+        player_value += card_value
+    else :
+        dealer_value += card_value
+
+    # ace detection
+    if for_player :
+        if num_player_aces > 0 :
+            if player_value > 21 :
+                # change ace from 11 to 1 and get "rid" of it
+                player_value -= 10
+                num_player_aces -= 1
+    else :
+        if num_dealer_aces > 0 :
+            if dealer_value > 21 :
+                dealer_value -= 10
+                num_dealer_aces -= 1
+    
+    
+
+    return (player_value, dealer_value, num_player_aces, num_dealer_aces)
 
 # --------------------------- turnover dealer card --------------------------- #
 def turnover_dealer_card(table : Image, dealer_hidden_card_name : str, dealer_cards : list) :
@@ -179,75 +203,47 @@ def turnover_dealer_card(table : Image, dealer_hidden_card_name : str, dealer_ca
     return (table_file, dealer_card_image)
 
 # --------------------------------- check if someone won --------------------------------- #
-def check_for_win(player_value : int, dealer_value : int, bet : float, dealer_reveal_card : bool) :
+def check_for_win(player_value : int, dealer_value : int, bet : float, dealer_turn : bool) :
     game_end = False
     payment = None
-
-
-
-    # game is over if dealer is at 17 or over OR if player gets a blackjack and dealer does not have a blackjack
-    if (dealer_value >= 17 or (dealer_value < 21 and player_value == 21)) and dealer_reveal_card:
-        game_end = True
-    # WIN CONDITIONS
-    # player blackjack
-    if player_value == 21 and dealer_value != 21:
-        payment = round(bet * 2.5, 2)
-    # player has lower value than dealer
-    elif game_end and player_value < dealer_value :
-        payment = 0
-    # player and dealer have same value
-    elif game_end and player_value == dealer_value :
-        payment = bet
-    # dealer busts and player did not (player doesnt have blackjack either)
-    elif dealer_value > 21 and not player_value < 21 :
-        payment = round(bet * 2, 2)
+    player_bust = False
+    description = ""
+    # end game if following conditions are true
     # player busts
-    elif player_value > 21 :
+    if player_value > 21 :
         game_end = True
-        payment = 0
+        player_bust = True
+    # dealer is at 17 or above
+    if dealer_value >= 17 and dealer_turn:
+        game_end = True
 
-    return (payment, game_end)
+    # payment
+    if game_end :
+        # player blackjack
+        if player_value == 21 and dealer_value != 21:
+            payment = round(bet * 2.5, 2)
+            description = f"**Final Values:**\nYou: **{player_value}** Dealer: **{dealer_value}**\nYou got a blackjack! **You win!**"
+        # player has lower value than dealer
+        elif player_value < dealer_value and dealer_value <= 21:
+            payment = 0
+            description = f"**Final Values:**\nYou: **{player_value}** Dealer: **{dealer_value}**\nYou had a lower value than the dealer, **you lose!**"
+        # player and dealer have same value
+        elif player_value == dealer_value :
+            payment = bet
+            description = f"**Final Values:**\nYou: **{player_value}** Dealer: **{dealer_value}**\nYou had the same value as the dealer, **it's a tie.**"
+        # dealer busts and player did not (player doesnt have blackjack either)
+        elif dealer_value > 21 and player_value < 21 :
+            payment = round(bet * 2, 2)
+            description = f"**Final Values:**\nYou: **{player_value}** Dealer: **{dealer_value}**\nThe dealer went over 21, **you win!**"
+        # player busts
+        elif player_bust :
+            payment = 0
+            description = f"**Final Values:**\nYou: **{player_value}** Dealer: **{dealer_value}**\nYou went over 21, **you lose!**"
+        elif player_value > dealer_value :
+            payment = round(bet * 2, 2)
+            description = f"**Final Values:**\nYou: **{player_value}** Dealer: **{dealer_value}**\nYou had a higher value than the dealer, **you win!**"
 
-# ---------------------------------------------------------------------------- #
-#                            simple winning checker                            #
-# ---------------------------------------------------------------------------- #
-# pp - player points
-# dp - dealer points
-# forceWin - player stood, force a result
-# return (bool result, who)
-def somebodyWon(pp : int, dp : int, forceWin=False):
-    if pp == 21:
-        return (True, 'player')
-    if pp < 21:
-        if dp < 21:
-            if forceWin == False:
-                return (False,)
-            else:
-                pdiff = abs(pp-21)
-                ddiff = abs(dp-21)
-                if pdiff < ddiff:
-                    return (True, 'player')
-                elif pdiff > ddiff:
-                    return (True, 'dealer')
-                else:
-                    return (True, 'tie')
-        if dp == 21:
-            return (True, 'dealer')
-        if dp > 21:
-            return (True, 'player')
-    if pp > 21:
-        if dp <= 21:
-            return (True, 'dealer')
-        if dp > 21:
-            pdiff = abs(pp-21)
-            ddiff = abs(dp-21)
-            if pdiff < ddiff:
-                return (True, 'player')
-            elif pdiff > ddiff:
-                return (True, 'dealer')
-            else:
-                return (True, 'tie')
-    return (False,)
+    return (description, payment, game_end)
 
 # --------------------------------- main Blackjack game --------------------------------- #
 class Blackjack(commands.Cog) :
@@ -270,14 +266,16 @@ class Blackjack(commands.Cog) :
         game_over = False
         num_player_cards = 0
         num_dealer_cards = 0
+        num_player_aces = 0
+        num_dealer_aces = 0
         player_value = 0
         dealer_value = 0
         player_card_image = None
         dealer_card_image = None
         dealer_hidden_card_name = None
-        dealer_reveal_card = False
         player_cards = []
         dealer_cards = []
+        desription = ""
         bet = round(bet, 2)
         view = BlackJackDropdownView()
 
@@ -289,7 +287,7 @@ class Blackjack(commands.Cog) :
         embed = nextcord.Embed(title="Blackjack", color=0x508f4a, description=f"**Bet: {bet}**\n**Get as close to 21 as you can without going over!**\nDealer stands on 17 or more\n**--------------------------------------------------------------------------------**\n**Blackjack** pays: **{3 * bet}**  Regular win pays **{2 * bet}**")
         embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
         embed.set_image(url="attachment://table.png")
-
+        
         table = create_table()
         # starting hand
         for i in range(4) :
@@ -299,147 +297,77 @@ class Blackjack(commands.Cog) :
                     hidden_card = True
                 if i % 2 == 0 :
                     for_player = True
-                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
+                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name, num_player_aces, num_dealer_aces = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value, num_player_aces, num_dealer_aces)
                 if hidden_card_name != None :
                     dealer_hidden_card_name = hidden_card_name
                 if i == 0 :
                     msg = await interaction.send(embed=embed, file=table_file)
                 else :
                     if i == 3:
+                        embed.set_footer(text=f"Your Value: {player_value} Dealer Value: ?")
                         await msg.edit(embed=embed, view=view, file=table_file)
                     else :
-                        await msg.edit(embed=embed, file=table_file)     
-        # wait for first hit or stand decision
-        await view.wait()
-        choice = int(view.val)
+                        await msg.edit(embed=embed, file=table_file)  
+
+        # wait for first hit or stand decision unless player has blackjack
+        if player_value == 21:
+            choice = 1
+        else :
+            await view.wait()
+            choice = int(view.val)
+
         while not game_over :            
             print("player chose: " + str(choice))
             new_view = BlackJackDropdownView()
             # player stands
             if choice == 1 :
-                dealer_reveal_card = True
+                dealer_turn = True
                 for_player = False
                 hidden_card = False
-                # replace dealer turned down card with face up card
+                # replace dealer turned down card with face up card and send embed
                 table_file, dealer_card_image = turnover_dealer_card(table, dealer_hidden_card_name, dealer_cards)
-                payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_reveal_card)
+                embed.set_footer(text=f"Your Value: {player_value} Dealer Value: {dealer_value}")
                 await msg.edit(embed=embed, view=view, file=table_file)
-                # get dealer card
-                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
-                game_over = True
-            
+                # check if dealer won
+                print(f"Player val: {player_value}")
+                print(f"Dealer val: {dealer_value}")
+                description, payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_turn)
+                print(f"game_over val: {game_over}")
+                # continue looping until dealer is game_over
+                while not game_over :
+                    # draw cards for dealer until game over
+                    player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name, num_player_aces, num_dealer_aces = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value, num_player_aces, num_dealer_aces)
+                    embed.set_footer(text=f"Your Value: {player_value} Dealer Value: {dealer_value}")
+                    await msg.edit(embed=embed, view=view, file=table_file)
+                    print(f"Player val: {player_value}")
+                    print(f"Dealer val: {dealer_value}")
+                    description, payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_turn)
+                    print(f"game_over val: {game_over}")
             # player hits
             elif choice == 0 :
                 for_player = True
                 hidden_card = False
-
-                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
+                dealer_turn = False
+                # draw a card for player
+                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name, num_player_aces, num_dealer_aces = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value, num_player_aces, num_dealer_aces)
+                embed.set_footer(text=f"Your Value: {player_value} Dealer Value: ?")
                 await msg.edit(embed=embed, view=new_view, file=table_file)
                 print(f"Player val: {player_value}")
-                print(f"Dealer val: {player_value}")
-                payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_reveal_card)
+                print(f"Dealer val: {dealer_value}")
+                description, payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_turn)
                 print(f"game_over val: {game_over}")
-        
-                await new_view.wait()
-                choice = int(new_view.val)
+                # stand on blackjack
+                if player_value == 21 :
+                    choice = 1
+                # wait for another decision
+                if not game_over and player_value != 21:
+                    await new_view.wait()
+                    choice = int(new_view.val)
 
-        embed = nextcord.Embed(title="Payment", color=0x508f4a, description=f"**${payment}** has been **deposited** to stealthhemu#3654's account!\nTotal Balance: **$0.00**")
+        embed = nextcord.Embed(title="Payment", color=0x508f4a, description= description + f"\n\n**${payment}** has been **deposited** to stealthhemu#3654's account!\nTotal Balance: **$0.00**")
         embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
         embed.set_image(None)
-        await msg.edit(embed=embed)
-
-
-    # ---------------------------------------------------------------------------- #
-    #                        simplified version of blackjack                       #
-    # ---------------------------------------------------------------------------- #
-    @nextcord.slash_command(name="blackjack-simple", description="Play Blackjack with Mr. Green", guild_ids=[serverId])
-    async def black_jack_simple(self, interaction : Interaction, starting_bet: float = SlashOption(name="bet", description="Your bet for blackjack")) :
-        
-        # ---------------------- check if starting_bet is valid ---------------------- #
-        starting_bet = database.normal_round(starting_bet, 2)        
-        if starting_bet <= 0.00:
-            return await interaction.send("What, you think I'm an idiot?! - Mr. Green", ephemeral=True)
-
-        # ---------------- check balance and take money away from user --------------- #
-        try:
-            user_balance_raw = database.retrieveData(interaction.guild.id, interaction.user, ['MONEY'])[0]
-        except:
-            return await interaction.send("Uh oh! I couldn't connect to the database.")
-        if user_balance_raw[0] == '$':
-            user_balance = float(user_balance_raw[1:])
-        else:
-            user_balance = float(user_balance_raw)
-        if user_balance < starting_bet:
-            return await interaction.send("You're too broke to play! - Mr. Green", ephemeral=True)
-        user_balance -= starting_bet
-        database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
-
-        # ----------------------------- send instructions ---------------------------- #
-        embed = nextcord.Embed(title="BlackJack - Simplified", color=0x508f4a)
-        embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
-        embed.add_field(name="Get as close to 21 as you can without going over!\n------------------------------------------------------------------------------------", 
-                        value="**${:.2f}** has been **withdrawn** from {}'s account!".format(starting_bet, str(interaction.user)),
-                        inline=False)
-        
-        simplePlayerPoints = randint(2,20)
-        simpleDealerPoints = randint(2,20)        
-
-        embed.add_field(name="Player", value=f"{simplePlayerPoints}", inline=True)
-        embed.add_field(name="Dealer", value=f"{simpleDealerPoints}", inline=True)
-        
-        simpleView = BlackJackDropdownView()
-
-        message = await interaction.send(embed=embed, view=simpleView)
-
-        # --------------------------------- main loop -------------------------------- #
-        payout = 0
-        won = False
-        simpleGameOver = False
-        while simpleGameOver == False:
-            
-            await simpleView.wait()
-
-            # -------------------------------- player turn ------------------------------- #
-            stand = False
-            simpleChoice = simpleView.val
-            if simpleChoice == "0":                     # hit
-                simplePlayerPoints += randint(1,13)
-            else:
-                stand = True
-                
-            # -------------------------------- dealer turn ------------------------------- #
-            if (simpleDealerPoints < 17):
-                simpleDealerPoints += randint(1,13)
-
-            # ------------------------------ resend message ------------------------------ #
-            embed.remove_field(1)
-            embed.insert_field_at(1, name="Player", value=f"{simplePlayerPoints}")
-            embed.remove_field(2)            
-            embed.insert_field_at(2, name="Dealer", value=f"{simpleDealerPoints}")
-            simpleView = BlackJackDropdownView()
-            await message.edit(embed=embed, view=simpleView)
-
-
-            # ----------------------------- handle game over ----------------------------- #
-            winResult = somebodyWon(simplePlayerPoints, simpleDealerPoints, forceWin=stand)
-            if winResult[0] == True:
-                simpleGameOver = True
-                if winResult[1] == 'player':
-                    payout = database.normal_round(starting_bet * 2, 2)
-                elif winResult[1] == 'tie':
-                    payout = starting_bet
-                else:
-                    payout = 0
-                embed.add_field(name="Winner:", value=f"{ winResult[1][:1].upper() }{ winResult[1][1:] }!", inline=False)
-                await message.edit(embed=embed, view=None)
-            
-        # ---------------------------------- payout ---------------------------------- #
-        await asyncio.sleep(1.5)        
-        user_balance += payout
-        database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
-        embed = nextcord.Embed(title="Payment", color=0x508f4a, description="**${:.2f}** has been **deposited** to {}'s account!\nTotal Balance: **${:.2f}**".format(payout, str(interaction.user), user_balance))
-        embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
-        return await interaction.send(embed=embed)
+        await msg.edit(embed=embed, view=None)
 
 
 def setup(bot: commands.Bot) :
