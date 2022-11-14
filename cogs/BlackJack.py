@@ -258,6 +258,26 @@ class Blackjack(commands.Cog) :
             name="bet", description="Your bet for blackjack", required=True
         )
     ) :        
+        
+        # --------------------------- check if bet is valid -------------------------- #
+        bet = database.normal_round(bet, 2)        
+        if bet <= 0.00:
+            return await interaction.send("What, you think I'm an idiot?! - Mr. Green", ephemeral=True)
+
+        # ------------------------ retrieve data from database ----------------------- #
+        try:
+            user_balance_raw = database.retrieveData(interaction.guild.id, interaction.user, ['MONEY'])[0]
+        except:
+            return await interaction.send("Uh oh! I couldn't connect to the database.")
+        if user_balance_raw[0] == '$':
+            user_balance = float(user_balance_raw[1:])
+        else:
+            user_balance = float(user_balance_raw)
+        if user_balance < bet:
+            return await interaction.send("You're too broke to play! - Mr. Green", ephemeral=True)
+        user_balance -= bet
+        database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
+        
         # function variables
         game_over = False
         num_player_cards = 0
@@ -280,10 +300,10 @@ class Blackjack(commands.Cog) :
         deck.shuffle()
         # basic embed
         # CHANGE BET TO ${bet} has been withdrawn from {player}'s account!
-        embed = nextcord.Embed(title="Blackjack", color=0x508f4a, description=f"**Bet: {bet}**\n**Get as close to 21 as you can without going over!**\nDealer stands on 17 or more\n**--------------------------------------------------------------------------------**\n**Blackjack** pays: **{3 * bet}**  Regular win pays **{2 * bet}**")
+        embed = nextcord.Embed(title="Blackjack", color=0x508f4a, description=f"**Bet: {bet}**\n**Get as close to 21 as you can without going over!**\nDealer stands on 17 or more\n**--------------------------------------------------------------------------------**\n**Blackjack** pays: **{3 * bet}**  Regular win pays **{2 * bet}**\n" + "**${:.2f}** has been **withdrawn** from {}'s account!".format(bet, str(interaction.user)))
         embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
         embed.set_image(url="attachment://table.png")
-        
+
         table = create_table()
         # starting hand
         for i in range(4) :
@@ -360,7 +380,11 @@ class Blackjack(commands.Cog) :
                     await new_view.wait()
                     choice = int(new_view.val)
 
-        embed = nextcord.Embed(title="Payment", color=0x508f4a, description= description + f"\n\n**${payment}** has been **deposited** to stealthhemu#3654's account!\nTotal Balance: **$0.00**")
+
+        # ---------------------------- send payout message --------------------------- #
+        user_balance += payment
+        database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
+        embed = nextcord.Embed(title="Payment", color=0x508f4a, description= description + "\n\n**${:.2f}** has been **deposited** to {}'s account!\nTotal Balance: **${:.2f}**".format(payment, interaction.user, user_balance))
         embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
         await msg.edit(embed=embed, view=None)
 
