@@ -284,16 +284,15 @@ class Blackjack(commands.Cog) :
                     if i == 3:
                         await msg.edit(embed=embed, view=view, file=table_file)
                     else :
-                        await msg.edit(embed=embed, file=table_file)        
+                        await msg.edit(embed=embed, file=table_file)     
+
         while not game_over :   
             # wait for decision from player
             print("waiting for player...")
             await view.wait()
             
             choice = int(view.val)
-            print("player chose: " + str(choice) + " " + str(type(choice)))
-
-            #view = BlackJackDropdownView()
+            print("player chose: " + str(choice))
 
             # player stands
             if choice == 1 :
@@ -303,7 +302,6 @@ class Blackjack(commands.Cog) :
             elif choice == 0 :
                 for_player = True
                 hidden_card = False
-                print("running hit command")
                 player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
 
             # debugging
@@ -314,9 +312,6 @@ class Blackjack(commands.Cog) :
 
             print(player_value)
             print(dealer_value)
-            
-            print(f"value = {view.val}")
-            print("made it past wait")
 
             payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_reveal_card)
             game_over = True

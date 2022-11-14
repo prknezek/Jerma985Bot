@@ -1,5 +1,4 @@
 import json
-
 import nextcord
 import requests
 from nextcord import Interaction
@@ -19,10 +18,9 @@ class Greetings(commands.Cog) :
     @commands.Cog.listener()
     async def on_ready(self):
         print("Greetings Cog Loaded")
-    #   ----------done----------
 
+    # ------------------------------ first function ------------------------------ #
 
-    # name of function is what the user will type to call this command
     @nextcord.slash_command(name="hello", description="says hello", guild_ids=[serverId])
     async def hello(self, interaction : Interaction):
         await interaction.send("Hello")
@@ -38,7 +36,7 @@ class Greetings(commands.Cog) :
             skullfaces = skullfaces + ":skull:"
         await interaction.send(skullfaces)
 
-    # new member join event
+    # --------------------------- new member join event -------------------------- #
     @commands.Cog.listener()
     async def on_member_join(self, member: nextcord.Member) :
 
@@ -68,43 +66,6 @@ class Greetings(commands.Cog) :
         embed.add_field(name="Welcome!",value="Here's a gift of $30 from Mr. Green himself!")
 
         await member.send(embed=embed)
-
-
-    # when user reacts
-    # @commands.Cog.listener()
-    # async def on_reaction_add(self, reaction, user) :
-    #     channel = reaction.message.channel
-    #     await channel.send(user.name + " added: " + reaction.emoji)
-
-    # # when user unreacts
-    # @commands.Cog.listener()
-    # async def on_reaction_remove(self, reaction, user) :
-    #     channel = reaction.message.channel
-    #     await channel.send(user.name + " removed: " + reaction.emoji)
-
-    # when a message is sent
-    # @commands.Cog.listener()
-    # async def on_message(self, message) :
-        # if message was sent by the bot
-        # if message.author == self.bot.user :
-        #     return
-        # if "happy" in message.content :
-        #     emoji = '\N{THUMBS UP SIGN}'
-        #     await message.add_reaction(emoji)
-
-        # WE DO A LITTLE TROLLING
-        # if message.author.id == 243898181585207296:                        
-        #     await message.channel.send("THE GREAT PAYTON HAS SENT A MESSAGE")
-        # if "is yeat the best rapper" in message.content :
-        #     await message.channel.send("yes")
-        # elif "jerma" in message.content and "twizzy" in message.content:
-        #     await message.channel.send("this jerma bot is a certified twizzy")
-        # elif "fr" in message.content :
-        #     await message.channel.send("no cap")
-        # elif "no cap" in message.content :
-        #     await message.channel.send("on god")
-        # elif "ong" in message.content or "on god" in message.content:
-        #     await message.channel.send("no kizzy")
 
 # export cog to bot
 def setup(bot: commands.Bot) :

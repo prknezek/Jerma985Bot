@@ -14,7 +14,9 @@ from nextcord.ext import commands
 from apikeys import *
 
 guild_to_voice_client = dict()
-# terminates bot after not being used for 5 minutes
+
+# ------------------------------------- Disconnects bot after 5 mins of inactivity ------------------------------------- #
+
 async def terminate_stale_voice_connections():
     while True:
         await asyncio.sleep(5)
@@ -28,6 +30,8 @@ async def terminate_stale_voice_connections():
 def _context_to_voice_channel(interaction) :
     # returns channel that user is in if user is in a channel
     return interaction.user.voice.channel if interaction.user.voice else None
+
+# ------------------------------------- Creates or retrieves voice client ------------------------------------- #
 
 # if creates and returns a voice client if there is none
 # returns voice client if it already exists
@@ -53,7 +57,8 @@ async def _get_or_create_voice_client(interaction) :
 
 API_ROOT = "https://api.uberduck.ai"
 
-# API CALL TO UBERDUCK W/ ERROR CHECKING
+# ------------------------------------- API call to Uberduck ------------------------------------- #
+
 async def query_uberduck(text, voice="jerma985") :
     max_time = 60
     async with aiohttp.ClientSession() as session :
@@ -96,6 +101,8 @@ class TTS(commands.Cog) :
     async def on_ready(self) :
         print("TTS Cog Loaded")
 
+    # ------------------------------------- Allows bot to join VC ------------------------------------- #
+
     @nextcord.slash_command(name = "join", description="Allows bot to join voice chat", guild_ids=[serverId])
     async def join_channel(self, interaction : Interaction) :
         # get the voice client
@@ -117,7 +124,9 @@ class TTS(commands.Cog) :
             await interaction.response.send_message("Connected to voice channel")
             # add voice client to dict with time it joined
             guild_to_voice_client[interaction.guild.id] = (voice_client, datetime.now(timezone.utc))
-        
+
+    # ------------------------------------- Allows bot to leave VC ------------------------------------- #
+
     @nextcord.slash_command(name = "leave", description="Kicks bot from voice channel", guild_ids=[serverId])
     async def leave_channel(self, interaction : Interaction) :
         if interaction.guild.id in guild_to_voice_client :
@@ -129,6 +138,8 @@ class TTS(commands.Cog) :
         else :
             # sends if bot is not in a channel
             await interaction.send("Bot is not connected to a voice channel", ephemeral=True)
+
+    # ------------------------------------- Text To Speech Command ------------------------------------- #
 
     @nextcord.slash_command(name = "jtts", description="Text to Speech in Jerma's voice", guild_ids=[serverId])
     async def jerma_tts(self, interaction : Interaction,
@@ -154,14 +165,12 @@ class TTS(commands.Cog) :
                 opus_f.close()
                 subprocess.check_call(["ffmpeg", "-y", "-i", wav_f.name, opus_f.name])
                 source = nextcord.FFmpegOpusAudio(wav_f.name)
-                #source = nextcord.FFmpegOpusAudio(opus_f.name)
                 voice_client.play(source, after=None)
                 while voice_client.is_playing() :
                     await asyncio.sleep(0.5)
                 await interaction.send("Sent an Uberduck message in vc")
         else :
             await interaction.send("You're not in a voice channel", ephemeral=True)
-
 
 def setup(bot: commands.Bot) :
     bot.add_cog(TTS(bot))
