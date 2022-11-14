@@ -37,11 +37,36 @@ class Admin(commands.Cog) :
         if isinstance(error, commands.MissingPermissions) :
             await interaction.send("You dont have permission to ban")
 
-    @nextcord.slash_command(name="dm", description="dms user", guild_ids=[serverId])
-    async def dm(self, interaction : Interaction, user: nextcord.Member, *, message) :
-        # of type !dm @[user] [message]
-        embed = nextcord.Embed(title=message)
-        await user.send(embed=embed)
+    @nextcord.slash_command(name="help", description="DMs user a list of commands", guild_ids=[serverId])
+    async def help(self, interaction : Interaction) :
+
+        embed = nextcord.Embed(title="Commands",
+                               description="List of commands that you can use with the Jerma985 bot")
+        embed.add_field(name="Greetings",
+                        value="/hello - sends a hello message\n/skullface - sends x skullface emojis",
+                        inline=False)
+        embed.add_field(name="Youtube",
+                        value="/youtube - sends a link to Jerma985's Youtube",
+                        inline=False)
+        embed.add_field(name="Twitch",
+                        value="/twitch - sends a link to Jerma985's Twitch\n/rstream - sends a link to a random twitch stream",
+                        inline=False)
+        embed.add_field(name="TTS",
+                        value="/join - joins your vc\n/leave - leaves your vc\n/jtts - plays a Jerma text-to-speech voice",
+                        inline=False)
+        embed.add_field(name="Birthday Cameo",
+                        value="/birthday-message - sends a personalized Jerma985 birthday message\n/birthday-supported-names - sends a dm with a list of supported names for the birthday message",
+                        inline=False)        
+        embed.add_field(name="Data",
+                        value="/store-info - stores info into a database (per user)\n/retrieve-info - retrieves stored info\n/balance - retrieves user's balance",
+                        inline=False)
+        embed.add_field(name="Mr. Green Games",
+                        value="/bombtiles - play bomb tiles with Mr. Green\n/slots - play slots with Mr. Green\n/blackjack-simplified - play a simplified version of blackjack with Mr. Green",
+                        inline=False)
+        
+
+        await interaction.user.send(embed=embed)
+        return await interaction.send("Sent! Check your DMs.", ephemeral=True)
 
     @nextcord.slash_command(name="add_role", description="adds role to user", guild_ids=[serverId])
     @commands.has_permissions(manage_roles = True)

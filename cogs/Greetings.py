@@ -62,47 +62,49 @@ class Greetings(commands.Cog) :
 
         # give new member some money
         database.storeData(member.guild.id, member, {'money': "30"})
-        embed = nextcord.Embed(title="Bomb Tiles", color=0x508f4a)
+        embed = nextcord.Embed(title="Welcome Gift", color=0x508f4a)
         mr_green_url = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen_RosterFace.png/revision/latest/top-crop/width/360/height/360?cb=20210426041715"
         embed.set_author(name= "Mr. Green's Casino", icon_url=mr_green_url)
         embed.add_field(name="Welcome!",value="Here's a gift of $30 from Mr. Green himself!")
 
+        await member.send(embed=embed)
+
 
     # when user reacts
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user) :
-        channel = reaction.message.channel
-        await channel.send(user.name + " added: " + reaction.emoji)
+    # @commands.Cog.listener()
+    # async def on_reaction_add(self, reaction, user) :
+    #     channel = reaction.message.channel
+    #     await channel.send(user.name + " added: " + reaction.emoji)
 
-    # when user unreacts
-    @commands.Cog.listener()
-    async def on_reaction_remove(self, reaction, user) :
-        channel = reaction.message.channel
-        await channel.send(user.name + " removed: " + reaction.emoji)
+    # # when user unreacts
+    # @commands.Cog.listener()
+    # async def on_reaction_remove(self, reaction, user) :
+    #     channel = reaction.message.channel
+    #     await channel.send(user.name + " removed: " + reaction.emoji)
 
     # when a message is sent
-    @commands.Cog.listener()
-    async def on_message(self, message) :
+    # @commands.Cog.listener()
+    # async def on_message(self, message) :
         # if message was sent by the bot
-        if message.author == self.bot.user :
-            return
-        if "happy" in message.content :
-            emoji = '\N{THUMBS UP SIGN}'
-            await message.add_reaction(emoji)
+        # if message.author == self.bot.user :
+        #     return
+        # if "happy" in message.content :
+        #     emoji = '\N{THUMBS UP SIGN}'
+        #     await message.add_reaction(emoji)
 
         # WE DO A LITTLE TROLLING
         # if message.author.id == 243898181585207296:                        
         #     await message.channel.send("THE GREAT PAYTON HAS SENT A MESSAGE")
-        if "is yeat the best rapper" in message.content :
-            await message.channel.send("yes")
-        elif "jerma" in message.content and "twizzy" in message.content:
-            await message.channel.send("this jerma bot is a certified twizzy")
-        elif "fr" in message.content :
-            await message.channel.send("no cap")
-        elif "no cap" in message.content :
-            await message.channel.send("on god")
-        elif "ong" in message.content or "on god" in message.content:
-            await message.channel.send("no kizzy")
+        # if "is yeat the best rapper" in message.content :
+        #     await message.channel.send("yes")
+        # elif "jerma" in message.content and "twizzy" in message.content:
+        #     await message.channel.send("this jerma bot is a certified twizzy")
+        # elif "fr" in message.content :
+        #     await message.channel.send("no cap")
+        # elif "no cap" in message.content :
+        #     await message.channel.send("on god")
+        # elif "ong" in message.content or "on god" in message.content:
+        #     await message.channel.send("no kizzy")
 
 # export cog to bot
 def setup(bot: commands.Bot) :
