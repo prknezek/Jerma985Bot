@@ -1,16 +1,12 @@
 import asyncio
-import os
-import sys
 from io import BytesIO
-from random import randint
 
 import nextcord
 import PIL
-import pydealer
-from nextcord import Interaction, Message, SlashOption
+from nextcord import Interaction, SlashOption
 from nextcord.ext import commands
 from PIL import Image
-from pydealer import Card, Deck, Stack
+from pydealer import Deck
 
 import cogs.Data as database
 

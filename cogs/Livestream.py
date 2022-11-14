@@ -2,7 +2,7 @@ from random import randint
 
 import nextcord
 import requests
-from nextcord import Interaction, SlashOption
+from nextcord import Interaction
 from nextcord.ext import commands, tasks
 from twitchAPI.twitch import Twitch
 
