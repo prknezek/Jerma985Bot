@@ -25,17 +25,19 @@ class BlackjackDropdown(nextcord.ui.Select) :
         super().__init__(placeholder="Options:", min_values=1, max_values=1, options=select_options)
 
     async def callback(self, interaction : Interaction) :
-        print(self.values[0])
-        if self.values[0] == 0 :
-            return None
-        elif self.values[0] == 1 :
-            return None
+        print("callback self.values " + self.values[0])
+        self.view.view_callback(valParam = self.values[0])
+        return self.values[0]
 
 # --------------------------------- dropdown display --------------------------------- #
 class BlackJackDropdownView(nextcord.ui.View) :
     def __init__(self) :
         super().__init__()
         self.add_item(BlackjackDropdown())
+    
+    def view_callback(self, valParam) :
+        self.val = valParam
+        self.stop()
 
 # --------------------------------- initial table creation --------------------------------- #
 def create_table() :    
@@ -65,7 +67,7 @@ def convert_to_file(im) :
     bytes = BytesIO()
     im.save(bytes, "PNG")
     bytes.seek(0)
-    return nextcord.File(bytes, filename=f"table.png")
+    return nextcord.File(bytes, filename="table.png")
 
 # --------------------------------- updates table image --------------------------------- #
 def table_update(table : Image, card_name : str, num_player_cards : int, num_dealer_cards : int, is_player_card : bool, player_cards : Image, dealer_cards : Image) :
@@ -107,6 +109,7 @@ async def card_deal(table : Image, embed : nextcord.Embed, view : BlackJackDropd
                     num_dealer_cards : int, dealer_card_image : Image, player_card_image : Image, hidden_card : bool, player_cards : list, dealer_cards : list,
                     player_value : int, dealer_value : int) :
     card_name = str(deck.deal())
+    print(f"card that was dealt: {card_name}")
     card_value = get_card_value(card_name)
 
     if for_player :
@@ -148,6 +151,35 @@ def get_card_value(card : str) :
         card_value = 10
     return card_value
 
+#def turnover_dealer_card(dealer_hidden_card : ) :
+
+
+# --------------------------------- check if someone won --------------------------------- #
+def check_for_win(player_value : int, dealer_value : int, bet : float, dealer_reveal_card : bool) :
+    game_end = False
+    payment = None
+    # game is over if dealer is at 17 or over OR if player gets a blackjack and dealer does not have a blackjack
+    if (dealer_value >= 17 or (dealer_value < 21 and player_value == 21)) and dealer_reveal_card:
+        game_end = True
+    # WIN CONDITIONS
+    # player blackjack
+    if player_value == 21 and dealer_value != 21:
+        payment = round(bet * 2.5, 2)
+    # player has lower value than dealer
+    elif game_end and player_value < dealer_value :
+        payment = 0
+    # player and dealer have same value
+    elif game_end and player_value == dealer_value :
+        payment = bet
+    # dealer busts and player did not (player doesnt have blackjack either)
+    elif dealer_value > 21 and not player_value < 21 :
+        payment = round(bet * 2, 2)
+    # player busts
+    elif player_value > 21 :
+        payment = 0
+
+    return (payment, game_end)
+
 # --------------------------------- main Blackjack game --------------------------------- #
 class Blackjack(commands.Cog) :
     def __init__(self, bot : commands.Bot) :
@@ -161,21 +193,23 @@ class Blackjack(commands.Cog) :
 
     @nextcord.slash_command(name="blackjack", description="Play blackjack with Mr. Green", guild_ids=[serverId])
     async def black_jack(self, interaction : Interaction,
-        bet: int = SlashOption(
+        bet: float = SlashOption(
             name="bet", description="Your bet for blackjack", required=True
         )
     ) :        
         # function variables
-        end_game = False
+        game_over = False
         num_player_cards = 0
         num_dealer_cards = 0
         player_value = 0
         dealer_value = 0
         player_card_image = None
         dealer_card_image = None
-        dealer_hidden_card = None
+        dealer_hidden_card_name = None
+        dealer_reveal_card = False
         player_cards = []
         dealer_cards = []
+        bet = round(bet, 2)
 
         # initial creation of embed (deal cards to dealer and player)
         view = BlackJackDropdownView()
@@ -183,15 +217,14 @@ class Blackjack(commands.Cog) :
         deck = Deck(jokers=False, rebuild=True, re_shuffle=True)
         deck.shuffle()
         # basic embed
-        embed = nextcord.Embed(title="Blackjack", color=0x508f4a, description=f"**Bet: {bet}**")
+        # CHANGE BET TO ${bet} has been withdrawn from {player}'s account!
+        embed = nextcord.Embed(title="Blackjack", color=0x508f4a, description=f"**Bet: {bet}**\n**Get as close to 21 as you can without going over!**\nDealer stands on 17 or more\n**--------------------------------------------------------------------------------**\n**Blackjack** pays: **{3 * bet}**  Regular win pays **{2 * bet}**")
         embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
         embed.set_image(url="attachment://table.png")
 
         table = create_table()
-
-        while not end_game :
-            # starting hand
-            for i in range(4) :
+        # starting hand
+        for i in range(4) :
                 for_player = False
                 hidden_card = False
                 if i == 1:
@@ -200,29 +233,35 @@ class Blackjack(commands.Cog) :
                     for_player = True
                 player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
                 if hidden_card_name != None :
-                    dealer_hidden_card = hidden_card_name
+                    dealer_hidden_card_name = hidden_card_name
                 if i == 0 :
                     msg = await interaction.send(embed=embed, file=table_file)
                 else :
                     if i == 3:
                         await msg.edit(embed=embed, view=view, file=table_file)
                     else :
-                        await msg.edit(embed=embed, file=table_file)
+                        await msg.edit(embed=embed, file=table_file)        
+        while not game_over :   
+            # wait for decision from player
+            print("waiting for player...")
+            await view.wait()
+            
+            choice = int(view.val)
+            print("player chose: " + str(choice) + " " + str(type(choice)))
 
-                    
-            #player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
-            #msg = await interaction.send(embed=embed, file=table_file)
-            #player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, True, player_cards, dealer_cards, player_value, dealer_value)
-            #await msg.edit(embed=embed, file=table_file)
-            # get dealer hidden card
-            
+            #view = BlackJackDropdownView()
 
-            #player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, True, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
-            #await msg.edit(embed=embed, file=table_file)
-            #player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, False, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, False, player_cards, dealer_cards, player_value, dealer_value)
+            # player stands
+            if choice == 1 :
+                dealer_reveal_card = True
             
-            #await msg.edit(embed=embed, view=view, file=table_file)
-            
+            # player hits
+            elif choice == 0 :
+                for_player = True
+                hidden_card = False
+                print("running hit command")
+                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
+
             # debugging
             for card in player_cards :
                 print (card)
@@ -231,7 +270,17 @@ class Blackjack(commands.Cog) :
 
             print(player_value)
             print(dealer_value)
-            end_game = True
+            
+            print(f"value = {view.val}")
+            print("made it past wait")
+
+            payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_reveal_card)
+            game_over = True
+
+        embed = nextcord.Embed(title="Payment", color=0x508f4a, description=f"**${payment}** has been **deposited** to stealthhemu#3654's account!\nTotal Balance: **$0.00**")
+        embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
+        embed.set_image(None)
+        await msg.edit(embed=embed, view=None)
 
 def setup(bot: commands.Bot) :
     bot.add_cog(Blackjack(bot))
