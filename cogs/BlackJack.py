@@ -1,15 +1,18 @@
-import nextcord
-from nextcord.ext import commands
-from nextcord import Interaction
-from nextcord import SlashOption
-from pydealer import Deck, Stack, Card
-import pydealer
-import os, sys
 import asyncio
+import os
+import sys
 from io import BytesIO
-from PIL import Image
+from random import randint
+
+import nextcord
 import PIL
-from nextcord import Message
+import pydealer
+from nextcord import Interaction, Message, SlashOption
+from nextcord.ext import commands
+from PIL import Image
+from pydealer import Card, Deck, Stack
+
+import cogs.Data as database
 
 # --------------------------------- global vars --------------------------------- #
 MR_GREEN_URL = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen_RosterFace.png/revision/latest/top-crop/width/360/height/360?cb=20210426041715"
@@ -180,6 +183,47 @@ def check_for_win(player_value : int, dealer_value : int, bet : float, dealer_re
 
     return (payment, game_end)
 
+# ---------------------------------------------------------------------------- #
+#                            simple winning checker                            #
+# ---------------------------------------------------------------------------- #
+# pp - player points
+# dp - dealer points
+# forceWin - player stood, force a result
+# return (bool result, who)
+def somebodyWon(pp : int, dp : int, forceWin=False):
+    if pp == 21:
+        return (True, 'player')
+    if pp < 21:
+        if dp < 21:
+            if forceWin == False:
+                return (False,)
+            else:
+                pdiff = abs(pp-21)
+                ddiff = abs(dp-21)
+                if pdiff < ddiff:
+                    return (True, 'player')
+                elif pdiff > ddiff:
+                    return (True, 'dealer')
+                else:
+                    return (True, 'tie')
+        if dp == 21:
+            return (True, 'dealer')
+        if dp > 21:
+            return (True, 'player')
+    if pp > 21:
+        if dp <= 21:
+            return (True, 'dealer')
+        if dp > 21:
+            pdiff = abs(pp-21)
+            ddiff = abs(dp-21)
+            if pdiff < ddiff:
+                return (True, 'player')
+            elif pdiff > ddiff:
+                return (True, 'dealer')
+            else:
+                return (True, 'tie')
+    return (False,)
+
 # --------------------------------- main Blackjack game --------------------------------- #
 class Blackjack(commands.Cog) :
     def __init__(self, bot : commands.Bot) :
@@ -281,6 +325,99 @@ class Blackjack(commands.Cog) :
         embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
         embed.set_image(None)
         await msg.edit(embed=embed, view=None)
+
+
+    # ---------------------------------------------------------------------------- #
+    #                        simplified version of blackjack                       #
+    # ---------------------------------------------------------------------------- #
+    @nextcord.slash_command(name="blackjack-simple", description="Play Blackjack with Mr. Green", guild_ids=[serverId])
+    async def black_jack_simple(self, interaction : Interaction, starting_bet: float = SlashOption(name="bet", description="Your bet for blackjack")) :
+        
+        # ---------------------- check if starting_bet is valid ---------------------- #
+        starting_bet = database.normal_round(starting_bet, 2)        
+        if starting_bet <= 0.00:
+            return await interaction.send("What, you think I'm an idiot?! - Mr. Green", ephemeral=True)
+
+        # ---------------- check balance and take money away from user --------------- #
+        try:
+            user_balance_raw = database.retrieveData(interaction.guild.id, interaction.user, ['MONEY'])[0]
+        except:
+            return await interaction.send("Uh oh! I couldn't connect to the database.")
+        if user_balance_raw[0] == '$':
+            user_balance = float(user_balance_raw[1:])
+        else:
+            user_balance = float(user_balance_raw)
+        if user_balance < starting_bet:
+            return await interaction.send("You're too broke to play! - Mr. Green", ephemeral=True)
+        user_balance -= starting_bet
+        database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
+
+        # ----------------------------- send instructions ---------------------------- #
+        embed = nextcord.Embed(title="BlackJack - Simplified", color=0x508f4a)
+        embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
+        embed.add_field(name="Get as close to 21 as you can without going over!\n------------------------------------------------------------------------------------", 
+                        value="**${:.2f}** has been **withdrawn** from {}'s account!".format(starting_bet, str(interaction.user)),
+                        inline=False)
+        
+        simplePlayerPoints = randint(2,20)
+        simpleDealerPoints = randint(2,20)        
+
+        embed.add_field(name="Player", value=f"{simplePlayerPoints}", inline=True)
+        embed.add_field(name="Dealer", value=f"{simpleDealerPoints}", inline=True)
+        
+        simpleView = BlackJackDropdownView()
+
+        message = await interaction.send(embed=embed, view=simpleView)
+
+        # --------------------------------- main loop -------------------------------- #
+        payout = 0
+        won = False
+        simpleGameOver = False
+        while simpleGameOver == False:
+            
+            await simpleView.wait()
+
+            # -------------------------------- player turn ------------------------------- #
+            stand = False
+            simpleChoice = simpleView.val
+            if simpleChoice == "0":                     # hit
+                simplePlayerPoints += randint(1,13)
+            else:
+                stand = True
+                
+            # -------------------------------- dealer turn ------------------------------- #
+            simpleDealerPoints += randint(1,13)
+
+            # ------------------------------ resend message ------------------------------ #
+            embed.remove_field(1)
+            embed.insert_field_at(1, name="Player", value=f"{simplePlayerPoints}")
+            embed.remove_field(2)            
+            embed.insert_field_at(2, name="Dealer", value=f"{simpleDealerPoints}")
+            simpleView = BlackJackDropdownView()
+            await message.edit(embed=embed, view=simpleView)
+
+
+            # ----------------------------- handle game over ----------------------------- #
+            winResult = somebodyWon(simplePlayerPoints, simpleDealerPoints, forceWin=stand)
+            if winResult[0] == True:
+                simpleGameOver = True
+                if winResult[1] == 'player':
+                    payout = database.normal_round(starting_bet * 2, 2)
+                elif winResult[1] == 'tie':
+                    payout = starting_bet
+                else:
+                    payout = 0
+                embed.add_field(name="Winner:", value=f"{ winResult[1][:1].upper() }{ winResult[1][1:] }!", inline=False)
+                await message.edit(embed=embed, view=None)
+            
+        # ---------------------------------- payout ---------------------------------- #
+        await asyncio.sleep(1.5)        
+        user_balance += payout
+        database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
+        embed = nextcord.Embed(title="Payment", color=0x508f4a, description="**${:.2f}** has been **deposited** to {}'s account!\nTotal Balance: **${:.2f}**".format(payout, str(interaction.user), user_balance))
+        embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
+        return await interaction.send(embed=embed)
+
 
 def setup(bot: commands.Bot) :
     bot.add_cog(Blackjack(bot))

@@ -36,7 +36,7 @@ class Slots(commands.Cog) :
     # ---------------------------------------------------------------------------- #
     #                                 slots command                                #
     # ---------------------------------------------------------------------------- #
-    @nextcord.slash_command(name="slots", description="A slots game", guild_ids=[serverId])
+    @nextcord.slash_command(name="slots", description="Play Slots with Mr. Green", guild_ids=[serverId])
     async def slots_game(self, interaction : Interaction, starting_bet:float = SlashOption(name="bet", description="Amount of money to bet")) :
         
         # ---------------------- check if starting_bet is valid ---------------------- #

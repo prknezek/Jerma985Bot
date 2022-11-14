@@ -125,7 +125,7 @@ class BombGame(commands.Cog):
     # ---------------------------------------------------------------------------- #
     #                            bomb tiles game command                           #
     # ---------------------------------------------------------------------------- #
-    @nextcord.slash_command(name = "bombtiles", description="A gambling game", guild_ids=[serverId])
+    @nextcord.slash_command(name = "bombtiles", description="Play Bomb Tiles with Mr. Green", guild_ids=[serverId])
     async def bomb_tiles(self, interaction : Interaction, 
                          starting_bet:float = SlashOption(name="bet",description="Input an amount to bet")) :
         
