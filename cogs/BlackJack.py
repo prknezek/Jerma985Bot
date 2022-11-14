@@ -366,7 +366,6 @@ class Blackjack(commands.Cog) :
 
         embed = nextcord.Embed(title="Payment", color=0x508f4a, description= description + f"\n\n**${payment}** has been **deposited** to stealthhemu#3654's account!\nTotal Balance: **$0.00**")
         embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
-        embed.set_image(None)
         await msg.edit(embed=embed, view=None)
 
 
