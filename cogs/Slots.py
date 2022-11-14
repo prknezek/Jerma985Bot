@@ -11,12 +11,19 @@ import cogs.BlackJack as blackjack
 import cogs.Data as database
 from cogs.Livestream import emote_images_url
 
+# ----------------------------- global variables ----------------------------- #
 MR_GREEN_URL = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen_RosterFace.png/revision/latest/top-crop/width/360/height/360?cb=20210426041715"
 
 IMG_WIDTH = 470
 IMG_HEIGHT = 60
 
+
+# ---------------------------------------------------------------------------- #
+#                                  main class                                  #
+# ---------------------------------------------------------------------------- #
 class Slots(commands.Cog) :
+
+    # --------------------------------- initalize -------------------------------- #
     def __init__(self, bot : commands.Bot) :
         self.bot = bot
 
@@ -26,6 +33,9 @@ class Slots(commands.Cog) :
     async def on_ready(self) :
         print("Slots Cog Loaded")
 
+    # ---------------------------------------------------------------------------- #
+    #                                 slots command                                #
+    # ---------------------------------------------------------------------------- #
     @nextcord.slash_command(name="slots", description="A slots game", guild_ids=[serverId])
     async def slots_game(self, interaction : Interaction, starting_bet:float = SlashOption(name="bet", description="Amount of money to bet")) :
         
@@ -48,11 +58,11 @@ class Slots(commands.Cog) :
         user_balance -= starting_bet
         database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
         
-
-        felt_img = Image.open("./cogs/resources/transparentbg.png")
-        felt_edit = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT))
-        felt_edit.paste(felt_img)
-        felt_file = blackjack.convert_to_file(felt_edit)
+        # -------------------------------- file stuff -------------------------------- #
+        bg_img = Image.open("./cogs/resources/transparentbg.png")
+        emotes_img = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT))
+        emotes_img.paste(bg_img)
+        emotes_file = blackjack.convert_to_file(emotes_img)
 
         # ----------------------------- send instructions ---------------------------- #
         embed = nextcord.Embed(title="Slots", color=0x508f4a)
@@ -63,34 +73,34 @@ class Slots(commands.Cog) :
         embed.add_field(name="Slot 2", value="rolling...", inline=True)
         embed.add_field(name="Slot 3", value="rolling...", inline=True)
         embed.set_image(url="attachment://table.png")
-        message = await interaction.send(embed=embed, file=felt_file)
+        message = await interaction.send(embed=embed, file=emotes_file)
 
+        # ----------- loop through and edit embed fields for each slot roll ---------- #
         imgIndexList = []
-        xcords = [0, 150, 316]
+        xcords = [0, 158, 316]
         for fieldIndex in range(1,len(embed.fields)):
 
             await asyncio.sleep(fieldIndex/2+0.5)
+
+            # -------------------------------- edit embed -------------------------------- #            
             imgIndex = randint(0,4)
             imgIndexList.append(imgIndex)
             embed.remove_field(fieldIndex)
-            embed.insert_field_at(fieldIndex, name=f"Slot {fieldIndex}", value=f"{imgIndex}", inline=True)            
+            embed.insert_field_at(fieldIndex, name=f"Slot {fieldIndex}", value="_ _", inline=True)            
             
-            #do some more file shit 
+            # --------------------------------- edit file -------------------------------- #
             coordinates = (xcords[fieldIndex-1], 0)
-            print(coordinates)
-
-            felt_img = Image.open("./cogs/resources/transparentbg.png")
-            #felt_edit = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT))
-
+            bg_img = Image.open("./cogs/resources/transparentbg.png")
             slot_img = Image.open(requests.get(emote_images_url[imgIndex], stream=True).raw)
-            felt_edit.paste(slot_img, coordinates)
-            felt_file = blackjack.convert_to_file(felt_edit)
+            emotes_img.paste(slot_img, coordinates)
+            emotes_file = blackjack.convert_to_file(emotes_img)
 
-            await message.edit(embed=embed, file=felt_file)
+            await message.edit(embed=embed, file=emotes_file)
+
 
         await asyncio.sleep(0.7)
 
-        # calculate payout
+        # ----------------------------- calculate payout ----------------------------- #
         payout = 0
         multiplier = 1
         if imgIndexList[0] == imgIndexList[1]:
@@ -101,7 +111,7 @@ class Slots(commands.Cog) :
             multiplier += imgIndexList[1]+3.5
         payout *= multiplier
 
-        # payout
+        # ---------------------------- send payout message --------------------------- #
         user_balance += payout
         database.storeData(interaction.guild.id, interaction.user, {'MONEY': str(user_balance)})
         embed = nextcord.Embed(title="Payment", color=0x508f4a, description="**${:.2f}** has been **deposited** to {}'s account!\nTotal Balance: **${:.2f}**".format(payout, str(interaction.user), user_balance))
