@@ -386,7 +386,8 @@ class Blackjack(commands.Cog) :
                 stand = True
                 
             # -------------------------------- dealer turn ------------------------------- #
-            simpleDealerPoints += randint(1,13)
+            if (simpleDealerPoints < 17):
+                simpleDealerPoints += randint(1,13)
 
             # ------------------------------ resend message ------------------------------ #
             embed.remove_field(1)
