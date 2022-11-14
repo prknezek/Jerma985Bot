@@ -11,6 +11,8 @@ from apikeys import *
 
 MR_GREEN_URL = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen_RosterFace.png/revision/latest/top-crop/width/360/height/360?cb=20210426041715"
 
+#TWITCH_LIVE_CHECKER_USERNAME = "jerma985"
+TWITCH_LIVE_CHECKER_USERNAME = "stealthhemu"
 
 # authentication w/ Twitch API
 client_id = TWITCH_CLIENT_ID
@@ -88,7 +90,7 @@ class Livestream(commands.Cog) :
         async def live_notifs_loop() :
             # grabbing info from server
             guild = self.bot.get_guild(1033811091828002817)
-            status = check_user("jerma985")
+            status = check_user(TWITCH_LIVE_CHECKER_USERNAME)
             channel = self.bot.get_channel(1036160854460215337)
 
             # getting twitch info
