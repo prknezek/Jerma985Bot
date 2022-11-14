@@ -65,7 +65,7 @@ def merge(im1, im2) :
 
     return im
 
-# converts table to file for use in embed
+# ------------------ converts table to file for use in embed ----------------- #
 def convert_to_file(im) :
     bytes = BytesIO()
     im.save(bytes, "PNG")
@@ -73,23 +73,24 @@ def convert_to_file(im) :
     return nextcord.File(bytes, filename="table.png")
 
 # --------------------------------- updates table image --------------------------------- #
-def table_update(table : Image, card_name : str, num_player_cards : int, num_dealer_cards : int, is_player_card : bool, player_cards : Image, dealer_cards : Image) :
+def table_update(table : Image, card_name : str, num_player_cards : int, num_dealer_cards : int, is_player_card : bool, player_card_image : Image, dealer_card_image : Image) :
     # get each cards file name
     card_file_name = card_name.replace(" ", "_").lower() + ".png"
     big_card = Image.open(f"./cogs/resources/PNG-cards-1.3/{card_file_name}")
     # if one card on stack
-    if num_player_cards == 1 :
+
+    if is_player_card :
         little_card = resize_card(big_card, num_player_cards)
-    # more than 1 card will be in stack
-    else :
-        if is_player_card :
-            box = (100 * (num_player_cards - 2), 0, 100 * (num_player_cards - 1), 726)
-            region = player_cards.crop(box)
+        if num_player_cards > 1:
+            box = (0, 0, 100 * (num_player_cards - 1), 726)
+            region = player_card_image.crop(box)
             big_card = merge(region, big_card)
             little_card = resize_card(big_card, num_player_cards)
-        else :
-            box = (100 * (num_dealer_cards - 2), 0, 100 * (num_dealer_cards - 1), 726)
-            region = dealer_cards.crop(box)
+    else :
+        little_card = resize_card(big_card, num_dealer_cards)
+        if num_dealer_cards > 1 :
+            box = (0, 0, 100 * (num_dealer_cards - 1), 726)
+            region = dealer_card_image.crop(box)
             big_card = merge(region, big_card)
             little_card = resize_card(big_card, num_dealer_cards)
 
@@ -108,9 +109,8 @@ def table_update(table : Image, card_name : str, num_player_cards : int, num_dea
     return (table, big_card)
 
 # --------------------------------- deals card --------------------------------- #
-async def card_deal(table : Image, embed : nextcord.Embed, view : BlackJackDropdownView, deck : Deck, for_player : bool, num_player_cards : int, 
-                    num_dealer_cards : int, dealer_card_image : Image, player_card_image : Image, hidden_card : bool, player_cards : list, dealer_cards : list,
-                    player_value : int, dealer_value : int) :
+async def card_deal(table : Image, deck : Deck, for_player : bool, num_player_cards : int, num_dealer_cards : int, dealer_card_image : Image, player_card_image : Image,
+                     hidden_card : bool, player_cards : list, dealer_cards : list, player_value : int, dealer_value : int) :
     card_name = str(deck.deal())
     print(f"card that was dealt: {card_name}")
     card_value = get_card_value(card_name)
@@ -154,13 +154,37 @@ def get_card_value(card : str) :
         card_value = 10
     return card_value
 
-#def turnover_dealer_card(dealer_hidden_card : ) :
+# --------------------------- turnover dealer card --------------------------- #
+def turnover_dealer_card(table : Image, dealer_hidden_card_name : str, dealer_cards : list) :
+    # format card name for image
+    formatted_dealer_hidden_card_name = dealer_hidden_card_name.replace(" ", "_").lower() + ".png"
+    hidden_card_image = Image.open(f"./cogs/resources/PNG-cards-1.3/{formatted_dealer_hidden_card_name}")
+    # get sliver of hidden card
+    box = (0, 0, 100, 726)
+    region = hidden_card_image.crop(box)
+    # get front of other card
+    formatted_dealer_hidden_card_name = dealer_cards[1].replace(" ", "_").lower() + ".png"
+    other_card_image = Image.open(f"./cogs/resources/PNG-cards-1.3/{formatted_dealer_hidden_card_name}")
+    # merge to one image
+    face_up_dealer_hand = merge(region, other_card_image)
+    dealer_card_image = face_up_dealer_hand
+    resized_face_up_dealer_hand = resize_card(face_up_dealer_hand, 2)
 
+    CARD_WIDTH = resized_face_up_dealer_hand.width
+    # paste new hand to table
+    card_location = (TABLE_WIDTH // 2 - CARD_WIDTH // 2, VERTICAL_PADDING)
+    table.paste(resized_face_up_dealer_hand, card_location)
+    table_file = convert_to_file(table)
+
+    return (table_file, dealer_card_image)
 
 # --------------------------------- check if someone won --------------------------------- #
 def check_for_win(player_value : int, dealer_value : int, bet : float, dealer_reveal_card : bool) :
     game_end = False
     payment = None
+
+
+
     # game is over if dealer is at 17 or over OR if player gets a blackjack and dealer does not have a blackjack
     if (dealer_value >= 17 or (dealer_value < 21 and player_value == 21)) and dealer_reveal_card:
         game_end = True
@@ -179,6 +203,7 @@ def check_for_win(player_value : int, dealer_value : int, bet : float, dealer_re
         payment = round(bet * 2, 2)
     # player busts
     elif player_value > 21 :
+        game_end = True
         payment = 0
 
     return (payment, game_end)
@@ -254,9 +279,8 @@ class Blackjack(commands.Cog) :
         player_cards = []
         dealer_cards = []
         bet = round(bet, 2)
-
-        # initial creation of embed (deal cards to dealer and player)
         view = BlackJackDropdownView()
+
         # build deck
         deck = Deck(jokers=False, rebuild=True, re_shuffle=True)
         deck.shuffle()
@@ -275,7 +299,7 @@ class Blackjack(commands.Cog) :
                     hidden_card = True
                 if i % 2 == 0 :
                     for_player = True
-                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
+                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
                 if hidden_card_name != None :
                     dealer_hidden_card_name = hidden_card_name
                 if i == 0 :
@@ -285,41 +309,44 @@ class Blackjack(commands.Cog) :
                         await msg.edit(embed=embed, view=view, file=table_file)
                     else :
                         await msg.edit(embed=embed, file=table_file)     
-
-        while not game_over :   
-            # wait for decision from player
-            print("waiting for player...")
-            await view.wait()
-            
-            choice = int(view.val)
+        # wait for first hit or stand decision
+        await view.wait()
+        choice = int(view.val)
+        while not game_over :            
             print("player chose: " + str(choice))
-
+            new_view = BlackJackDropdownView()
             # player stands
             if choice == 1 :
                 dealer_reveal_card = True
+                for_player = False
+                hidden_card = False
+                # replace dealer turned down card with face up card
+                table_file, dealer_card_image = turnover_dealer_card(table, dealer_hidden_card_name, dealer_cards)
+                payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_reveal_card)
+                await msg.edit(embed=embed, view=view, file=table_file)
+                # get dealer card
+                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
+                game_over = True
             
             # player hits
             elif choice == 0 :
                 for_player = True
                 hidden_card = False
-                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, embed, view, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
 
-            # debugging
-            for card in player_cards :
-                print (card)
-            for card in dealer_cards :
-                print (card)
-
-            print(player_value)
-            print(dealer_value)
-
-            payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_reveal_card)
-            game_over = True
+                player_value, dealer_value, player_cards, dealer_cards, player_card_image, dealer_card_image, num_player_cards, num_dealer_cards, table_file, hidden_card_name = await card_deal(table, deck, for_player, num_player_cards, num_dealer_cards, dealer_card_image, player_card_image, hidden_card, player_cards, dealer_cards, player_value, dealer_value)
+                await msg.edit(embed=embed, view=new_view, file=table_file)
+                print(f"Player val: {player_value}")
+                print(f"Dealer val: {player_value}")
+                payment, game_over = check_for_win(player_value, dealer_value, bet, dealer_reveal_card)
+                print(f"game_over val: {game_over}")
+        
+                await new_view.wait()
+                choice = int(new_view.val)
 
         embed = nextcord.Embed(title="Payment", color=0x508f4a, description=f"**${payment}** has been **deposited** to stealthhemu#3654's account!\nTotal Balance: **$0.00**")
         embed.set_author(name= "Mr. Green's Casino", icon_url=MR_GREEN_URL)
         embed.set_image(None)
-        await msg.edit(embed=embed, view=None)
+        await msg.edit(embed=embed)
 
 
     # ---------------------------------------------------------------------------- #

@@ -50,10 +50,10 @@ for img in emotejson :
         if id in dark_img_url :
             emote_images_url.append(dark_img_url)
 
-for img in emote_images_url :
-    print(img)
+#for img in emote_images_url :
+    #print(img)
 
-print(f"-------------- Num of emotes: {len(emote_images_url)} --------------")
+#print(f"-------------- Num of emotes: {len(emote_images_url)} --------------")
 
 
 # returns true if streamer is online and false if not online
