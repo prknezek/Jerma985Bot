@@ -14,7 +14,7 @@ MR_GREEN_URL = "https://static.wikia.nocookie.net/jerma-lore/images/2/25/MrGreen
 #TWITCH_LIVE_CHECKER_USERNAME = "jerma985"
 TWITCH_LIVE_CHECKER_USERNAME = "stealthhemu"
 
-# authentication w/ Twitch API
+# ----------------------- authentication w/ Twitch API ----------------------- #
 client_id = TWITCH_CLIENT_ID
 client_secret = TWITCH_CLIENT_SECRET_ID
 twitch = Twitch(client_id, client_secret)
@@ -50,13 +50,8 @@ for img in emotejson :
         if id in dark_img_url :
             emote_images_url.append(dark_img_url)
 
-#for img in emote_images_url :
-    #print(img)
 
-#print(f"-------------- Num of emotes: {len(emote_images_url)} --------------")
-
-
-# returns true if streamer is online and false if not online
+# ------------------------ Check if streamer is online ----------------------- #
 def check_user(user):
     try:
         url = TWITCH_STREAM_API_ENDPOINTS_V5.format(user)
@@ -72,7 +67,7 @@ def check_user(user):
             return False
     except IndexError :
         return False
-
+# ----------------------------- Livestream class ----------------------------- #
 class Livestream(commands.Cog) :
     def __init__(self, bot: commands.Bot) :
         self.bot = bot
@@ -80,12 +75,10 @@ class Livestream(commands.Cog) :
     serverId = 1033811091828002817
 
     @commands.Cog.listener()
-    # when the bot is ready to start receiveing commands it will execute this function
     async def on_ready(self):
-        # print statement for when bot is ready
         print("Livestream Cog Loaded")
 
-        # live streaming detection
+        # ------------------------- live streaming detection ------------------------- #
         @tasks.loop(minutes=1)
         async def live_notifs_loop() :
             # grabbing info from server
@@ -137,7 +130,8 @@ class Livestream(commands.Cog) :
         # starts the loop to scan for streaming activity
         live_notifs_loop.start()
 
-    # gives user a random broadcast from the past 60 days
+    # --------------------- pulls a random stream from Twitch -------------------- #
+
     # twitch only stores broadcasts for 60 days
     @nextcord.slash_command(name="rstream", description="retrieves a random Jerma985 stream", guild_ids=[serverId])    
     async def rstream(self, interaction : Interaction):
@@ -178,12 +172,11 @@ class Livestream(commands.Cog) :
 
         thumbnail = selected_broadcast['thumbnail_url']
 
+        # creating embed
         embed = nextcord.Embed(title="Random Stream", url=url, description=title, color=0x6441a5)
         
         embed.set_author(name=author, url=twitch_url, icon_url=broadcaster_image)
         
-        # thumbnail
-        #embed.set_thumbnail(url="https://static.wikia.nocookie.net/jerma-lore/images/9/91/Evil_Jerma.png")
         user = interaction.user.display_name
         embed.add_field(name="Duration:", value=duration, inline=True)
         embed.add_field(name="Published:", value=published, inline=True)

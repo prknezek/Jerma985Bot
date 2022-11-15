@@ -43,7 +43,7 @@ class Greetings(commands.Cog) :
         # importing random joke from joke api
         jokeurl = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
 
-        querystring = {"format":"json","blacklistFlags":"nsfw,racist"}
+        querystring = {"format":"json","idRange":"0-150","blacklistFlags":"nsfw,racist"}
 
         headers = {
             "X-RapidAPI-Key": JOKEAPI,
@@ -53,10 +53,12 @@ class Greetings(commands.Cog) :
         response = requests.request("GET", jokeurl, headers=headers, params=querystring)
 
         await member.send(f"Welcome {member.mention}! Here's a joke for you.")
-        await member.send(f"{json.loads(response.text)['setup']}") # prints setup into chat
-        # response.text is in json so we are filtering the setup attribute
-        # out of the response and printing it in nextcord
-        await member.send(f"{json.loads(response.text)['delivery']}")
+
+        if json.loads(response.text)['type'] == "twopart" :
+            await member.send(f"{json.loads(response.text)['setup']}")
+            await member.send(f"{json.loads(response.text)['delivery']}")
+        else :
+            await member.send(f"{json.loads(response.text)['joke']}")
 
         # give new member some money
         database.storeData(member.guild.id, member, {'money': "30"})
