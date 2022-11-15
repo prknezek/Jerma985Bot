@@ -93,7 +93,7 @@ class UI(commands.Cog) :
 
     # ----------------------------- random wiki link ----------------------------- #
     @nextcord.slash_command(name = "rwikipage", description="Link to a random Jerma wikipage", guild_ids=[serverId])
-    async def wiki_link(self, interaction : Interaction) :
+    async def rwiki_link(self, interaction : Interaction) :
         numsites = len(wikisites)
         siteindex = randint(0, numsites-1)
         await interaction.response.send_message(f"{wikisites[siteindex]}")
