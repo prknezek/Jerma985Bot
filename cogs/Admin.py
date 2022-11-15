@@ -61,7 +61,7 @@ class Admin(commands.Cog) :
                         value="/store-info - stores info into a database (per user)\n/retrieve-info - retrieves stored info\n/balance - retrieves user's balance",
                         inline=False)
         embed.add_field(name="Mr. Green Games",
-                        value="/bombtiles - play bomb tiles with Mr. Green\n/slots - play slots with Mr. Green\n/blackjack-simplified - play a simplified version of blackjack with Mr. Green",
+                        value="/bombtiles - play bomb tiles with Mr. Green\n/slots - play slots with Mr. Green\n/blackjack - play a game of blackjack with Mr. Green",
                         inline=False)
         
 
